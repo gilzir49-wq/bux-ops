@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#1c1c1c">
 <title>תפעול · קרוספיט באקס</title>
 
-<!-- ==== PWA (הוסף למסך הבית) ==== -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,51 +17,37 @@
   --bg:#1c1c1c; --card:#262626; --card2:#2f2f2f; --line:#3a3a3a;
   --orange:#fdab3d; --orange-dim:#c9832d;
   --text:#f4f4f4; --muted:#9a9a9a;
-  --green:#3fb950; --yellow:#f1c93b; --red:#f26d6d;
+  --green:#3fb950; --yellow:#f1c93b; --red:#f26d6d; --blue:#6db3f2;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Rubik,Arial,sans-serif;
-  background:var(--bg); color:var(--text);
-  min-height:100vh; line-height:1.5;
+  background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5;
   padding-bottom:env(safe-area-inset-bottom);
 }
 button{font-family:inherit}
+input,textarea,select{font-family:inherit}
 .hidden{display:none!important}
 
-/* ===== מסך התחברות ===== */
-#screen-login{
-  min-height:100vh; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; padding:24px 18px;
-}
-.brand{ text-align:center; margin-bottom:26px }
-.brand .logo{
-  width:74px;height:74px;border-radius:20px;margin:0 auto 12px;
-  background:linear-gradient(135deg,var(--orange),#e6941f);
-  display:flex;align-items:center;justify-content:center;font-size:38px;
-  box-shadow:0 8px 24px rgba(253,171,61,.28);
-}
+/* ===== התחברות ===== */
+#screen-login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px}
+.brand{text-align:center;margin-bottom:26px}
+.brand .logo{width:74px;height:74px;border-radius:20px;margin:0 auto 12px;
+  background:linear-gradient(135deg,var(--orange),#e6941f);display:flex;align-items:center;
+  justify-content:center;font-size:38px;box-shadow:0 8px 24px rgba(253,171,61,.28)}
 .brand h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.3px}
 .brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
-
-.who{ width:100%; max-width:440px }
+.who{width:100%;max-width:440px}
 .who h2{font-size:15px;color:var(--muted);font-weight:600;margin:0 0 12px;text-align:center}
-.staff-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
-.staff-btn{
-  background:var(--card); border:1px solid var(--line); color:var(--text);
-  padding:16px 12px; border-radius:16px; font-size:16px; font-weight:700;
-  cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;
-  transition:.12s;
-}
+.staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.staff-btn{background:var(--card);border:1px solid var(--line);color:var(--text);padding:16px 12px;
+  border-radius:16px;font-size:16px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:6px;transition:.12s}
 .staff-btn:active{transform:scale(.97)}
 .staff-btn .rl{font-size:12px;font-weight:600;color:var(--muted)}
-.staff-btn .av{
-  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-size:15px;font-weight:800;color:#1c1c1c;
-}
-
-/* ===== לוח PIN ===== */
+.staff-btn .av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:#1c1c1c}
 #pin-wrap{width:100%;max-width:360px;text-align:center}
 #pin-wrap .name{font-size:20px;font-weight:800;margin-bottom:2px}
 #pin-wrap .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
@@ -72,50 +57,47 @@ button{font-family:inherit}
 .pin-dots.err .d{border-color:var(--red);animation:shake .35s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;margin:0 auto}
-.pad button{
-  aspect-ratio:1/1;border-radius:50%;border:1px solid var(--line);
-  background:var(--card);color:var(--text);font-size:26px;font-weight:700;cursor:pointer;
-}
+.pad button{aspect-ratio:1/1;border-radius:50%;border:1px solid var(--line);background:var(--card);
+  color:var(--text);font-size:26px;font-weight:700;cursor:pointer}
 .pad button:active{background:var(--card2)}
 .pad .ghost{background:transparent;border:none}
 .stay{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;color:var(--muted);font-size:14px}
 .stay input{width:18px;height:18px;accent-color:var(--orange)}
 .link-btn{background:none;border:none;color:var(--orange);font-size:14px;cursor:pointer;margin-top:16px}
 
-/* ===== אפליקציה ===== */
-#screen-app{max-width:520px;margin:0 auto;min-height:100vh}
-.topbar{
-  position:sticky;top:0;z-index:5;background:rgba(28,28,28,.92);
-  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
-  padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;
-  display:flex;align-items:center;gap:12px;
-}
-.topbar .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-weight:800;color:#1c1c1c;font-size:16px;flex:0 0 auto}
+/* ===== מסגרת אפליקציה ===== */
+#screen-app{max-width:560px;margin:0 auto;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(28,28,28,.94);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  display:flex;align-items:center;gap:12px}
+.topbar .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#1c1c1c;font-size:16px;flex:0 0 auto}
 .topbar .who-t{flex:1;min-width:0}
 .topbar .who-t .n{font-weight:800;font-size:16px}
 .topbar .who-t .r{color:var(--muted);font-size:12.5px}
-.topbar .out{background:var(--card);border:1px solid var(--line);color:var(--muted);
-  border-radius:10px;padding:8px 10px;font-size:13px;cursor:pointer}
+.topbar .out{background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:10px;
+  padding:8px 10px;font-size:13px;cursor:pointer}
+.content{padding:16px 16px 48px}
 
-.content{padding:16px 16px 40px}
-.shift-banner{
-  border-radius:14px;padding:12px 14px;margin-bottom:18px;font-weight:700;
-  display:flex;align-items:center;gap:10px;font-size:14.5px;
-}
+/* כותרת מסך פנימי */
+.vhead{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.vhead .back{background:var(--card);border:1px solid var(--line);color:var(--text);width:40px;height:40px;
+  border-radius:12px;font-size:20px;cursor:pointer;flex:0 0 auto}
+.vhead h2{margin:0;font-size:20px;font-weight:800}
+.vhead .sub{font-size:12.5px;color:var(--muted);font-weight:500}
+
+/* באנר משמרת + סקשנים + פעולות בית */
+.shift-banner{border-radius:14px;padding:12px 14px;margin-bottom:18px;font-weight:700;display:flex;
+  align-items:center;gap:10px;font-size:14.5px}
 .shift-banner.morning{background:rgba(241,201,59,.14);border:1px solid rgba(241,201,59,.35);color:var(--yellow)}
 .shift-banner.evening{background:rgba(253,171,61,.14);border:1px solid rgba(253,171,61,.35);color:var(--orange)}
 .shift-banner.off{background:var(--card);border:1px solid var(--line);color:var(--muted)}
 .shift-banner .big{font-size:20px}
-
 .sec-title{font-size:13px;color:var(--muted);font-weight:700;margin:22px 2px 10px;letter-spacing:.4px}
 .sec-title:first-of-type{margin-top:6px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.action{
-  background:var(--card);border:1px solid var(--line);border-radius:16px;
-  padding:16px 14px;text-align:right;cursor:pointer;position:relative;
-  display:flex;flex-direction:column;gap:8px;min-height:104px;transition:.12s;
-}
+.action{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;text-align:right;
+  cursor:pointer;position:relative;display:flex;flex-direction:column;gap:8px;min-height:104px;transition:.12s}
 .action:active{transform:scale(.98);background:var(--card2)}
 .action .ic{font-size:26px}
 .action .lb{font-weight:800;font-size:15px;line-height:1.25}
@@ -123,44 +105,156 @@ button{font-family:inherit}
 .action.wide{grid-column:1/-1;flex-direction:row;align-items:center;min-height:auto}
 .action.wide .ic{font-size:24px}
 .action.primary{border-color:var(--orange-dim);background:linear-gradient(160deg,rgba(253,171,61,.16),var(--card))}
-.badge-soon{position:absolute;top:10px;left:10px;background:var(--card2);color:var(--muted);
-  font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:20px;border:1px solid var(--line)}
+.action .cnt{position:absolute;top:10px;left:10px;background:var(--red);color:#fff;font-size:11px;font-weight:800;
+  min-width:20px;height:20px;border-radius:20px;display:flex;align-items:center;justify-content:center;padding:0 5px}
 
-/* ===== מודל ===== */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;
-  align-items:flex-end;justify-content:center;animation:fade .15s}
+/* ===== טפסים ===== */
+.form{display:flex;flex-direction:column;gap:2px}
+.field{margin-bottom:16px}
+.field > label{display:block;font-size:14px;font-weight:700;margin-bottom:8px}
+.field .req{color:var(--orange)}
+.field .hint{font-size:12px;color:var(--muted);font-weight:500;margin:0 0 8px}
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:12px;
+  padding:13px 14px;font-size:15px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--orange)}
+textarea{min-height:80px;resize:vertical;line-height:1.5}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg-b{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:11px 14px;
+  font-size:14px;font-weight:600;cursor:pointer;flex:1;min-width:74px;text-align:center;transition:.1s}
+.seg-b:active{transform:scale(.97)}
+.seg-b.sel{background:var(--orange);border-color:var(--orange);color:#1c1c1c;font-weight:800}
+.seg.yn .seg-b{flex:1}
+.submit{width:100%;background:var(--orange);color:#1c1c1c;border:none;border-radius:14px;padding:16px;
+  font-size:17px;font-weight:800;cursor:pointer;margin-top:10px}
+.submit:active{transform:scale(.99)}
+.submit[disabled]{opacity:.5}
+
+/* צ'קליסט */
+.check-list{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.check{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;display:flex;
+  align-items:flex-start;gap:12px;cursor:pointer;transition:.1s}
+.check .box{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);flex:0 0 auto;display:flex;
+  align-items:center;justify-content:center;font-size:15px;color:#1c1c1c;margin-top:1px}
+.check.on{border-color:var(--green);background:rgba(63,185,80,.08)}
+.check.on .box{background:var(--green);border-color:var(--green)}
+.check .txt{font-size:14.5px;font-weight:600}
+.check .help{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px}
+.check-progress{font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:600}
+
+/* רובריקה (הערכת מאמן) */
+.rubric{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.rubric .rt{font-weight:800;font-size:14.5px;margin-bottom:2px}
+.rubric .rw{font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.rubric .nums{display:flex;gap:8px}
+.rubric .nb{flex:1;aspect-ratio:1.3/1;border:1px solid var(--line);background:var(--card2);color:var(--text);
+  border-radius:10px;font-size:18px;font-weight:800;cursor:pointer}
+.rubric .nb.sel{background:var(--orange);border-color:var(--orange);color:#1c1c1c}
+.rubric .rl{font-size:12.5px;color:var(--orange);font-weight:600;margin-top:9px;min-height:17px}
+.score-box{position:sticky;bottom:12px;background:var(--card2);border:1px solid var(--orange-dim);border-radius:14px;
+  padding:14px;margin:6px 0 16px;text-align:center}
+.score-box .sv{font-size:30px;font-weight:900;color:var(--orange)}
+.score-box .sl{font-size:13px;color:var(--muted);font-weight:600}
+.verdict{margin-top:8px;font-size:15px;font-weight:800;padding:8px;border-radius:10px}
+.verdict.ok{background:rgba(63,185,80,.15);color:var(--green)}
+.verdict.no{background:rgba(242,109,109,.15);color:var(--red)}
+
+/* רשימות / פיד / מלאי / ניהול */
+.card-list{display:flex;flex-direction:column;gap:12px}
+.rec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.rec .rtop{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.rec .who{font-weight:800;font-size:15px}
+.rec .meta{font-size:12px;color:var(--muted);font-weight:500}
+.rec .spacer{flex:1}
+.chip{font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:20px;white-space:nowrap}
+.chip.morning{background:rgba(241,201,59,.16);color:var(--yellow)}
+.chip.evening{background:rgba(253,171,61,.16);color:var(--orange)}
+.chip.pending{background:rgba(253,171,61,.16);color:var(--orange)}
+.chip.done{background:rgba(63,185,80,.15);color:var(--green)}
+.chip.injury{background:rgba(242,109,109,.18);color:var(--red)}
+.chip.gray{background:var(--card2);color:var(--muted)}
+.rec .row{font-size:13.5px;margin:5px 0;display:flex;gap:6px}
+.rec .row b{color:var(--muted);font-weight:700;flex:0 0 auto}
+.rec .handoff{background:rgba(253,171,61,.09);border:1px solid rgba(253,171,61,.25);border-radius:10px;
+  padding:10px 12px;margin-top:8px;font-size:14px}
+.rec .handoff b{color:var(--orange);display:block;font-size:12px;margin-bottom:2px}
+.mark-done{width:100%;margin-top:10px;background:var(--green);color:#0d2a12;border:none;border-radius:11px;
+  padding:12px;font-weight:800;font-size:14.5px;cursor:pointer}
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:15px}
+.empty .e{font-size:40px;display:block;margin-bottom:10px}
+
+/* מצב מלאי */
+.inv-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;padding:13px 14px}
+.inv-row.out{border-color:rgba(242,109,109,.5);background:rgba(242,109,109,.07)}
+.inv-row.low{border-color:rgba(241,201,59,.4)}
+.inv-row .dot{width:12px;height:12px;border-radius:50%;flex:0 0 auto}
+.inv-row .dot.ok{background:var(--green)} .inv-row .dot.low{background:var(--yellow)} .inv-row .dot.out{background:var(--red)}
+.inv-row .nm{font-weight:700;font-size:14.5px;flex:1}
+.inv-row .st{font-size:12.5px;font-weight:800}
+.inv-row .st.ok{color:var(--green)} .inv-row .st.low{color:var(--yellow)} .inv-row .st.out{color:var(--red)}
+.inv-row .st.na{color:var(--muted)}
+
+/* דשבורד */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center}
+.kpi .v{font-size:30px;font-weight:900}
+.kpi .l{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:2px}
+.kpi.alert{border-color:rgba(242,109,109,.4)} .kpi.alert .v{color:var(--red)}
+.kpi.good .v{color:var(--green)}
+
+/* ניהול */
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:11px;
+  padding:11px;font-size:14px;font-weight:700;cursor:pointer}
+.tab.sel{background:var(--orange);border-color:var(--orange);color:#1c1c1c;font-weight:800}
+.adm-row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.adm-row .r1{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.adm-row input,.adm-row select{padding:9px 11px;font-size:14px}
+.adm-row .del{background:rgba(242,109,109,.13);border:1px solid rgba(242,109,109,.3);color:var(--red);
+  border-radius:9px;padding:8px 11px;font-size:13px;font-weight:700;cursor:pointer;flex:0 0 auto}
+.adm-row .save{background:var(--green);border:none;color:#0d2a12;border-radius:9px;padding:8px 13px;
+  font-size:13px;font-weight:800;cursor:pointer;flex:0 0 auto}
+.adm-row .toggle{flex:0 0 auto;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.adm-row .toggle input{width:18px;height:18px;accent-color:var(--orange)}
+.add-btn{width:100%;background:var(--card);border:1.5px dashed var(--line);color:var(--orange);border-radius:12px;
+  padding:14px;font-size:14.5px;font-weight:700;cursor:pointer;margin-top:4px}
+.sub-tabs{display:flex;gap:6px;margin-bottom:12px}
+.sub-tab{flex:1;background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:9px;
+  padding:8px;font-size:13px;font-weight:600;cursor:pointer}
+.sub-tab.sel{background:var(--card2);color:var(--orange);border-color:var(--orange-dim)}
+
+/* מודל / טוסט */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:flex-end;
+  justify-content:center;animation:fade .15s}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.sheet{background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;
-  padding:26px 22px calc(30px + env(safe-area-inset-bottom));border-top:1px solid var(--line);
-  animation:up .2s}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:22px 22px 0 0;
+  padding:26px 22px calc(30px + env(safe-area-inset-bottom));border-top:1px solid var(--line);animation:up .2s}
 @keyframes up{from{transform:translateY(40px)}to{transform:translateY(0)}}
 .sheet .grip{width:40px;height:4px;background:var(--line);border-radius:4px;margin:0 auto 18px}
-.sheet h3{margin:0 0 6px;font-size:19px}
-.sheet p{margin:0 0 20px;color:var(--muted);font-size:14.5px}
-.sheet .ok{width:100%;background:var(--orange);color:#1c1c1c;border:none;border-radius:14px;
-  padding:15px;font-size:16px;font-weight:800;cursor:pointer}
-
+.sheet h3{margin:0 0 6px;font-size:22px;text-align:center}
+.sheet p{margin:0 0 20px;color:var(--muted);font-size:14.5px;text-align:center}
+.sheet .ok{width:100%;background:var(--orange);color:#1c1c1c;border:none;border-radius:14px;padding:15px;
+  font-size:16px;font-weight:800;cursor:pointer}
+.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:var(--green);color:#0d2a12;padding:12px 20px;border-radius:12px;font-weight:800;font-size:14.5px;
+  z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.4);animation:fade .15s}
 .foot{text-align:center;color:#5a5a5a;font-size:12px;padding:24px 0 30px}
 .foot .heart{color:var(--orange)}
+.loading{text-align:center;color:var(--muted);padding:50px;font-size:15px}
 </style>
 </head>
 <body>
 
-<!-- =================== מסך התחברות =================== -->
+<!-- =================== התחברות =================== -->
 <section id="screen-login">
-  <div class="brand">
-    <div class="logo">🏋️</div>
+  <div class="brand"><div class="logo">🏋️</div>
     <h1>תפעול · קרוספיט באקס</h1>
-    <p>המקום שבו המשמרות מדברות זו עם זו</p>
-  </div>
-
-  <!-- בחירת שם -->
+    <p>המקום שבו המשמרות מדברות זו עם זו</p></div>
   <div class="who" id="who-pick">
     <h2>מי מתחבר/ת? 🧡</h2>
     <div class="staff-grid" id="staff-grid"></div>
   </div>
-
-  <!-- לוח PIN -->
   <div class="who hidden" id="pin-wrap">
     <div class="name" id="pin-name"></div>
     <div class="sub">הקש/י את הקוד האישי (4 ספרות)</div>
@@ -171,27 +265,33 @@ button{font-family:inherit}
   </div>
 </section>
 
-<!-- =================== מסך אפליקציה =================== -->
+<!-- =================== אפליקציה =================== -->
 <section id="screen-app" class="hidden">
   <div class="topbar">
     <div class="av" id="t-av"></div>
     <div class="who-t"><div class="n" id="t-name"></div><div class="r" id="t-role"></div></div>
     <button class="out" onclick="logout()">יציאה</button>
   </div>
-  <div class="content" id="home"></div>
+  <div class="content" id="view"></div>
   <div class="foot">קרוספיט באקס · תפעול <span class="heart">🧡</span></div>
 </section>
 
 <script>
 /* ============================================================
-   ⚙️  הגדרות ונתונים — הכל נשמר בענן (Firebase) ומסונכרן לכולם
+   ⚙️ ענן (Firebase RTDB) — הכל מסונכרן לכל הצוות
    ============================================================ */
 const CLOUD = {
   base: "https://command-center-gal-default-rtdb.europe-west1.firebasedatabase.app",
   node: "bux-ops"
 };
+const U = p => `${CLOUD.base}/${CLOUD.node}/${p}.json`;
+async function cGet(p){ try{const r=await fetch(U(p));return await r.json();}catch(e){return null;} }
+async function cPush(p,o){ const r=await fetch(U(p),{method:'POST',body:JSON.stringify(o)});return await r.json(); }
+async function cPut(p,o){ const r=await fetch(U(p),{method:'PUT',body:JSON.stringify(o)});return await r.json(); }
+async function cPatch(p,o){ const r=await fetch(U(p),{method:'PATCH',body:JSON.stringify(o)});return await r.json(); }
+async function cDel(p){ await fetch(U(p),{method:'DELETE'}); }
 
-// נתוני גיבוי מקומיים — משמשים רק אם הענן ריק (כדי שתמיד יופיע משהו נכון)
+/* גיבוי מקומי (אם הענן ריק) */
 const FALLBACK_STAFF = {
   s1:{name:"גל זוהר",role:"manager",pin:"1000",active:true,order:1},
   s2:{name:"רחל זוהר",role:"manager",pin:"2000",active:true,order:2},
@@ -203,133 +303,106 @@ const FALLBACK_STAFF = {
   s8:{name:"קורן",role:"coach",pin:"5555",active:true,order:8},
   s9:{name:"אריאל",role:"helper",pin:"6666",active:true,order:9},
 };
-
-// שמות התפקידים בעברית + צבע אווטאר
 const ROLES = {
-  manager:{he:"ניהול",     color:"#fdab3d"},
-  coach:  {he:"מאמן/ת",    color:"#3fb950"},
-  sales:  {he:"שירות ומכירה",color:"#f1c93b"},
-  helper: {he:"נער עזר",   color:"#6db3f2"},
+  manager:{he:"ניהול",color:"#fdab3d"}, coach:{he:"מאמן/ת",color:"#3fb950"},
+  sales:{he:"שירות ומכירה",color:"#f1c93b"}, helper:{he:"נער עזר",color:"#6db3f2"},
 };
 
 /* ============================================================
-   פעולות הבית — לפי תפקיד. (הטפסים עצמם ייבנו בשלב הבא — "בקרוב")
+   פעולות הבית לפי תפקיד
    ============================================================ */
 const ACTIONS = {
-  do:{ // דברים שממלאים
+  do:{
     'checklist-open': {ic:"🌅",lb:"צ'קליסט פתיחה",ds:"פתיחת משמרת"},
     'checklist-close':{ic:"🌙",lb:"צ'קליסט סגירה",ds:"סגירת משמרת"},
-    'shift-summary':  {ic:"📋",lb:"סיכום משמרת",  ds:"הלב של המשמרת",primary:true},
-    'coach-eval':     {ic:"⭐",lb:"הערכת מאמן",   ds:"מבוסס L2"},
+    'shift-summary':  {ic:"📋",lb:"סיכום משמרת",ds:"הלב של המשמרת",primary:true},
+    'coach-eval':     {ic:"⭐",lb:"הערכת מאמן",ds:"מבוסס L2"},
     'sales-summary':  {ic:"🧡",lb:"סיכום שירות/מכירה",ds:"סיכום היום",primary:true},
     'helper-checklist':{ic:"🧹",lb:"צ'קליסט נער עזר",ds:"תחזוקה + מלאי",primary:true},
-    'inventory':      {ic:"📦",lb:"דיווח מלאי",   ds:"מה חסר?"},
+    'inventory':      {ic:"📦",lb:"דיווח מלאי",ds:"מה חסר?"},
   },
-  view:{ // דברים שצופים בהם
-    'feed':           {ic:"🗂️",lb:"פיד סיכומים",  ds:"מה קרה במשמרות"},
-    'review':         {ic:"🔎",lb:"תור בקרה",      ds:"לעדכן בארבוקס"},
-    'inventory-status':{ic:"🚦",lb:"מצב מלאי",     ds:"מה תקין / חסר"},
-    'dashboard':      {ic:"📊",lb:"דשבורד ניהולי", ds:"מבט על"},
-    'admin':          {ic:"⚙️",lb:"מסך ניהול",     ds:"צוות · צ'קליסט · מלאי"},
+  view:{
+    'feed':{ic:"🗂️",lb:"פיד סיכומים",ds:"מה קרה במשמרות"},
+    'review':{ic:"🔎",lb:"תור בקרה",ds:"לעדכן בארבוקס"},
+    'inventory-status':{ic:"🚦",lb:"מצב מלאי",ds:"מה תקין / חסר"},
+    'dashboard':{ic:"📊",lb:"דשבורד ניהולי",ds:"מבט על"},
+    'admin':{ic:"⚙️",lb:"מסך ניהול",ds:"צוות · צ'קליסט · מלאי"},
   }
 };
-// אילו פעולות לכל תפקיד
 const ROLE_ACTIONS = {
   manager:{do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
            view:['feed','review','inventory-status','dashboard','admin']},
   coach:  {do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
            view:['feed','inventory-status']},
-  sales:  {do:['sales-summary'],
-           view:['feed','review','inventory-status']},
-  helper: {do:['helper-checklist'],
-           view:['inventory-status']},
+  sales:  {do:['sales-summary'], view:['feed','review','inventory-status']},
+  helper: {do:['helper-checklist'], view:['inventory-status']},
+};
+const ROUTE = {
+  'checklist-open':()=>viewChecklist('open'),
+  'checklist-close':()=>viewChecklist('close'),
+  'shift-summary':viewShiftSummary, 'coach-eval':viewCoachEval,
+  'sales-summary':viewSalesSummary, 'helper-checklist':viewHelper,
+  'inventory':viewInventoryReport, 'feed':viewFeed, 'review':viewReview,
+  'inventory-status':viewInventoryStatus, 'dashboard':viewDashboard, 'admin':viewAdmin,
 };
 
 /* ============================================================
-   מצב זמן ריצה
+   מצב ריצה
    ============================================================ */
-let STAFF = {};          // נטען מהענן
-let ME = null;           // המשתמש/ת המחובר/ת
-let pinBuffer = "";
-let pendingStaffId = null;
+let STAFF={}, CHECKS={}, INV={};   // config מהענן
+let ME=null, pinBuffer="", pendingStaffId=null;
 
-/* ---------- טעינת צוות מהענן ---------- */
-async function loadStaff(){
-  try{
-    const r = await fetch(`${CLOUD.base}/${CLOUD.node}/staff.json`);
-    const data = await r.json();
-    STAFF = (data && Object.keys(data).length) ? data : FALLBACK_STAFF;
-  }catch(e){
-    STAFF = FALLBACK_STAFF;
-  }
+async function loadConfig(){
+  const [st,ck,iv] = await Promise.all([cGet('staff'),cGet('checklist_items'),cGet('inventory_items')]);
+  STAFF = (st&&Object.keys(st).length)?st:FALLBACK_STAFF;
+  CHECKS = ck||{}; INV = iv||{};
 }
 
-/* ---------- מסך בחירת שם ---------- */
+/* ---------- עזרי תאריך/זמן ---------- */
+function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function fmtDate(iso){ if(!iso)return''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+function nowTime(){ const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function shiftNow(){
+  const h=new Date().getHours();
+  if(h>=5&&h<11) return {k:"morning",ic:"🌅",t:"משמרת בוקר",s:"הכל מוכן 55 דק' לפני — עד 05:55",def:"בוקר"};
+  if(h>=15&&h<22) return {k:"evening",ic:"🌙",t:"משמרת ערב",s:"הכל מוכן 55 דק' לפני — עד 16:55",def:"ערב"};
+  return {k:"off",ic:"☕",t:"מחוץ לשעות המשמרת",s:"בוקר 06:00–10:00 · ערב 16:00–21:00",def:"בוקר"};
+}
+function greet(){ const h=new Date().getHours(); return h<12?"בוקר טוב":h<17?"צהריים טובים":h<21?"ערב טוב":"לילה טוב"; }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ============================================================
+   התחברות
+   ============================================================ */
 function renderStaffPick(){
-  const grid = document.getElementById('staff-grid');
-  const list = Object.entries(STAFF)
-    .filter(([id,s])=>s.active)
-    .sort((a,b)=>(a[1].order||99)-(b[1].order||99));
-  grid.innerHTML = list.map(([id,s])=>{
-    const rc = (ROLES[s.role]||{}).color || "#888";
-    const he = (ROLES[s.role]||{}).he || s.role;
-    const initial = (s.name||"?").trim()[0];
+  const grid=document.getElementById('staff-grid');
+  const list=Object.entries(STAFF).filter(([id,s])=>s.active).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
+  grid.innerHTML=list.map(([id,s])=>{
+    const rc=(ROLES[s.role]||{}).color||"#888", he=(ROLES[s.role]||{}).he||s.role, ini=(s.name||"?").trim()[0];
     return `<button class="staff-btn" onclick="pickStaff('${id}')">
-        <span class="av" style="background:${rc}">${initial}</span>
-        <span>${s.name}</span>
-        <span class="rl">${he}</span>
-      </button>`;
+      <span class="av" style="background:${rc}">${ini}</span><span>${esc(s.name)}</span><span class="rl">${he}</span></button>`;
   }).join('');
 }
-
-/* ---------- לוח PIN ---------- */
 function buildPad(){
-  const pad = document.getElementById('pad');
-  const keys = [1,2,3,4,5,6,7,8,9,'ghost',0,'del'];
-  pad.innerHTML = keys.map(k=>{
-    if(k==='ghost') return `<button class="ghost" disabled></button>`;
-    if(k==='del')   return `<button onclick="pinDel()">⌫</button>`;
-    return `<button onclick="pinPress(${k})">${k}</button>`;
-  }).join('');
+  const pad=document.getElementById('pad');
+  pad.innerHTML=[1,2,3,4,5,6,7,8,9,'ghost',0,'del'].map(k=>
+    k==='ghost'?`<button class="ghost" disabled></button>`:
+    k==='del'?`<button onclick="pinDel()">⌫</button>`:
+    `<button onclick="pinPress(${k})">${k}</button>`).join('');
 }
-function pickStaff(id){
-  pendingStaffId = id; pinBuffer="";
-  document.getElementById('pin-name').textContent = STAFF[id].name;
-  updateDots();
-  document.getElementById('who-pick').classList.add('hidden');
-  document.getElementById('pin-wrap').classList.remove('hidden');
-}
-function backToPick(){
-  document.getElementById('pin-wrap').classList.add('hidden');
-  document.getElementById('who-pick').classList.remove('hidden');
-  pinBuffer=""; pendingStaffId=null;
-}
-function pinPress(n){
-  if(pinBuffer.length>=4) return;
-  pinBuffer += n; updateDots();
-  if(pinBuffer.length===4) setTimeout(checkPin,120);
-}
-function pinDel(){ pinBuffer=pinBuffer.slice(0,-1); updateDots(); }
-function updateDots(){
-  const dots = document.getElementById('pin-dots');
-  dots.classList.remove('err');
-  [...dots.children].forEach((d,i)=>d.classList.toggle('on', i<pinBuffer.length));
-}
+function pickStaff(id){ pendingStaffId=id;pinBuffer="";document.getElementById('pin-name').textContent=STAFF[id].name;
+  updateDots();document.getElementById('who-pick').classList.add('hidden');document.getElementById('pin-wrap').classList.remove('hidden'); }
+function backToPick(){ document.getElementById('pin-wrap').classList.add('hidden');document.getElementById('who-pick').classList.remove('hidden');pinBuffer="";pendingStaffId=null; }
+function pinPress(n){ if(pinBuffer.length>=4)return;pinBuffer+=n;updateDots();if(pinBuffer.length===4)setTimeout(checkPin,120); }
+function pinDel(){ pinBuffer=pinBuffer.slice(0,-1);updateDots(); }
+function updateDots(){ const d=document.getElementById('pin-dots');d.classList.remove('err');[...d.children].forEach((x,i)=>x.classList.toggle('on',i<pinBuffer.length)); }
 function checkPin(){
-  const s = STAFF[pendingStaffId];
-  if(s && pinBuffer === String(s.pin)){
-    const stay = document.getElementById('stay').checked;
-    if(stay) localStorage.setItem('bux_ops_me', pendingStaffId);
-    loginAs(pendingStaffId);
-  }else{
-    document.getElementById('pin-dots').classList.add('err');
-    pinBuffer=""; setTimeout(updateDots,400);
-  }
+  const s=STAFF[pendingStaffId];
+  if(s&&pinBuffer===String(s.pin)){ if(document.getElementById('stay').checked)localStorage.setItem('bux_ops_me',pendingStaffId); loginAs(pendingStaffId); }
+  else{ document.getElementById('pin-dots').classList.add('err');pinBuffer="";setTimeout(updateDots,400); }
 }
-
-/* ---------- כניסה + בית ---------- */
 function loginAs(id){
-  ME = {id, ...STAFF[id]};
+  ME={id,...STAFF[id]};
   document.getElementById('screen-login').classList.add('hidden');
   document.getElementById('screen-app').classList.remove('hidden');
   const rc=(ROLES[ME.role]||{}).color||"#888";
@@ -337,86 +410,498 @@ function loginAs(id){
   document.getElementById('t-av').style.background=rc;
   document.getElementById('t-name').textContent=ME.name;
   document.getElementById('t-role').textContent=(ROLES[ME.role]||{}).he||ME.role;
-  renderHome();
-  window.scrollTo(0,0);
+  viewHome(); window.scrollTo(0,0);
 }
-function logout(){
-  localStorage.removeItem('bux_ops_me');
-  ME=null;
-  document.getElementById('screen-app').classList.add('hidden');
-  document.getElementById('screen-login').classList.remove('hidden');
-  backToPick();
-}
+function logout(){ localStorage.removeItem('bux_ops_me');ME=null;
+  document.getElementById('screen-app').classList.add('hidden');document.getElementById('screen-login').classList.remove('hidden');backToPick(); }
 
-function shiftNow(){
-  const h=new Date().getHours();
-  if(h>=5 && h<11) return {k:"morning",ic:"🌅",t:"משמרת בוקר",s:"הכל מוכן 55 דק' לפני — עד 05:55"};
-  if(h>=15 && h<22) return {k:"evening",ic:"🌙",t:"משמרת ערב",s:"הכל מוכן 55 דק' לפני — עד 16:55"};
-  return {k:"off",ic:"☕",t:"מחוץ לשעות המשמרת",s:"בוקר 06:00–10:00 · ערב 16:00–21:00"};
-}
-function greet(){
-  const h=new Date().getHours();
-  if(h<12) return "בוקר טוב"; if(h<17) return "צהריים טובים"; if(h<21) return "ערב טוב"; return "לילה טוב";
-}
-
-function renderHome(){
-  const conf = ROLE_ACTIONS[ME.role] || {do:[],view:[]};
-  const sh = shiftNow();
-  const card = (key, kind, wide=false)=>{
-    const a = ACTIONS[kind][key]; if(!a) return "";
-    const cls = ["action", wide?"wide":"", a.primary?"primary":""].join(" ");
-    return `<button class="${cls}" onclick="openStub('${a.lb}')">
-        <span class="badge-soon">בקרוב</span>
-        <span class="ic">${a.ic}</span>
-        <span><span class="lb">${a.lb}</span>${a.ds?`<br><span class="ds">${a.ds}</span>`:""}</span>
-      </button>`;
-  };
-  let html = `
-    <div class="shift-banner ${sh.k}">
-      <span class="big">${sh.ic}</span>
-      <span><b>${greet()}, ${ME.name.split(' ')[0]}</b> · ${sh.t}<br>
-      <span style="font-weight:500;opacity:.85">${sh.s}</span></span>
-    </div>`;
-
-  if(conf.do.length){
-    html += `<div class="sec-title">מה ממלאים היום ✍️</div><div class="actions">`;
-    html += conf.do.map(k=>card(k,'do')).join('');
-    html += `</div>`;
-  }
-  if(conf.view.length){
-    html += `<div class="sec-title">צפייה ומעקב 👀</div><div class="actions">`;
-    // מסך ניהול תמיד רחב ובולט
-    html += conf.view.map(k=>card(k,'view', k==='admin')).join('');
-    html += `</div>`;
-  }
-  document.getElementById('home').innerHTML = html;
-}
-
-/* ---------- מודל "בקרוב" (עד שנבנה את הטפסים) ---------- */
-function openStub(name){
-  const bg=document.createElement('div');
-  bg.className='modal-bg';
-  bg.innerHTML=`<div class="sheet" onclick="event.stopPropagation()">
-    <div class="grip"></div>
-    <h3>${name} 🚧</h3>
-    <p>זה הבסיס — המסך הזה ייבנה בשלב הבא, אחרי שגל יאשר את הסקיצה.
-       כרגע רואים את המבנה, ההתחברות וההרשאות לפי תפקיד.</p>
-    <button class="ok" onclick="this.closest('.modal-bg').remove()">הבנתי 🧡</button>
-  </div>`;
-  bg.onclick=()=>bg.remove();
+/* ============================================================
+   ניווט
+   ============================================================ */
+const V=()=>document.getElementById('view');
+function go(action){ (ROUTE[action]||viewHome)(); window.scrollTo(0,0); }
+function vhead(title,sub){ return `<div class="vhead"><button class="back" onclick="viewHome()">→</button>
+  <div><h2>${title}</h2>${sub?`<div class="sub">${sub}</div>`:''}</div></div>`; }
+function loading(){ V().innerHTML=`<div class="loading">טוען… 🧡</div>`; }
+function toast(msg){ const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200); }
+function sheet(title,body,btn="הבנתי 🧡",cb){
+  const bg=document.createElement('div');bg.className='modal-bg';
+  bg.innerHTML=`<div class="sheet" onclick="event.stopPropagation()"><div class="grip"></div>
+    <h3>${title}</h3><p>${body}</p><button class="ok">${btn}</button></div>`;
+  bg.onclick=()=>bg.remove(); bg.querySelector('.ok').onclick=()=>{bg.remove();if(cb)cb();};
   document.body.appendChild(bg);
 }
 
-/* ---------- אתחול ---------- */
+/* ---------- בית ---------- */
+function viewHome(){
+  const conf=ROLE_ACTIONS[ME.role]||{do:[],view:[]}, sh=shiftNow();
+  const card=(key,kind,wide=false)=>{ const a=ACTIONS[kind][key]; if(!a)return"";
+    const cls=["action",wide?"wide":"",a.primary?"primary":""].join(" ");
+    const badge = (key==='review'&&window._pendCount)?`<span class="cnt">${window._pendCount}</span>`:'';
+    return `<button class="${cls}" onclick="go('${key}')">${badge}<span class="ic">${a.ic}</span>
+      <span><span class="lb">${a.lb}</span>${a.ds?`<br><span class="ds">${a.ds}</span>`:""}</span></button>`; };
+  let h=`<div class="shift-banner ${sh.k}"><span class="big">${sh.ic}</span>
+    <span><b>${greet()}, ${esc(ME.name.split(' ')[0])}</b> · ${sh.t}<br>
+    <span style="font-weight:500;opacity:.85">${sh.s}</span></span></div>`;
+  if(conf.do.length){ h+=`<div class="sec-title">מה ממלאים היום ✍️</div><div class="actions">`+conf.do.map(k=>card(k,'do')).join('')+`</div>`; }
+  if(conf.view.length){ h+=`<div class="sec-title">צפייה ומעקב 👀</div><div class="actions">`+conf.view.map(k=>card(k,'view',k==='admin')).join('')+`</div>`; }
+  V().innerHTML=h;
+  // עדכון מונה תור בקרה ברקע
+  if(conf.view.includes('review')) refreshPendCount();
+}
+async function refreshPendCount(){
+  const s=await cGet('shift_summaries')||{};
+  window._pendCount=Object.values(s).filter(x=>x.status==='pending').length;
+  const el=document.querySelector(".action .cnt"); // רענון קל
+  if(ME) { const btn=[...document.querySelectorAll('.action')].find(b=>b.getAttribute('onclick')==="go('review')");
+    if(btn){ btn.querySelector('.cnt')?.remove(); if(window._pendCount){ const c=document.createElement('span');c.className='cnt';c.textContent=window._pendCount;btn.appendChild(c);} } }
+}
+
+/* ---------- רכיבי טופס ---------- */
+function seg(group,opts,def){ return `<div class="seg" data-group="${group}">`+opts.map(o=>
+  `<button type="button" class="seg-b${o===def?' sel':''}" data-val="${esc(o)}" onclick="segPick(this,'${group}')">${esc(o)}</button>`).join('')+`</div>`; }
+function segYN(group,def){ return `<div class="seg yn" data-group="${group}">`+['כן','לא'].map(o=>
+  `<button type="button" class="seg-b${o===def?' sel':''}" data-val="${o}" onclick="segPick(this,'${group}')">${o}</button>`).join('')+`</div>`; }
+let SEG_HOOK={};
+function segPick(b,group){ [...b.parentElement.children].forEach(c=>c.classList.remove('sel'));b.classList.add('sel');
+  if(SEG_HOOK[group])SEG_HOOK[group](b.dataset.val); }
+function segVal(group){ const el=document.querySelector(`.seg[data-group="${group}"] .seg-b.sel`);return el?el.dataset.val:null; }
+
+/* ============================================================
+   7.1 צ'קליסט פתיחה/סגירה
+   ============================================================ */
+function checklistItems(type){ return Object.entries(CHECKS).filter(([id,c])=>c.active&&c.type===type).sort((a,b)=>(a[1].order||99)-(b[1].order||99)); }
+function viewChecklist(type){
+  const sh=shiftNow(), title=type==='open'?"צ'קליסט פתיחה 🌅":"צ'קליסט סגירה 🌙";
+  const items=checklistItems(type);
+  let h=vhead(title,"סימון + הערת תקלה בסוף");
+  h+=`<div class="field"><label>סוג משמרת <span class="req">*</span></label>${seg('shift',['בוקר','ערב'],sh.def)}</div>`;
+  h+=`<div class="check-progress" id="cprog">0 / ${items.length} סומנו</div>`;
+  h+=`<div class="check-list">`+items.map(([id,c])=>
+    `<div class="check" data-id="${id}" onclick="toggleCheck(this)"><div class="box">✓</div>
+      <div><div class="txt">${esc(c.text)}</div>${c.help?`<div class="help">${esc(c.help)}</div>`:''}</div></div>`).join('')+`</div>`;
+  h+=`<div class="field" style="margin-top:16px"><label>תקלה / הערה חופשית</label>
+    <textarea id="note" placeholder="משהו שלא תקין? נשבר? חסר? כתוב כאן…"></textarea></div>`;
+  h+=`<button class="submit" onclick="submitChecklist('${type}')">שליחה ✅</button>`;
+  V().innerHTML=h;
+}
+function toggleCheck(el){ el.classList.toggle('on');
+  const done=V().querySelectorAll('.check.on').length, all=V().querySelectorAll('.check').length;
+  document.getElementById('cprog').textContent=`${done} / ${all} סומנו`; }
+async function submitChecklist(type){
+  const shift=segVal('shift'); if(!shift)return toast('בחר/י סוג משמרת');
+  const checked=[...V().querySelectorAll('.check.on')].map(e=>e.dataset.id);
+  await cPush('checklist_submissions',{staffId:ME.id,name:ME.name,type,shift,date:todayISO(),time:nowTime(),
+    checked,total:V().querySelectorAll('.check').length,note:document.getElementById('note').value.trim(),ts:Date.now()});
+  sheet('נשלח! ✅',`הצ'קליסט נשמר. תודה ${esc(ME.name.split(' ')[0])} 🧡`,'חזרה לבית',viewHome);
+}
+
+/* ============================================================
+   7.2 סיכום משמרת (הלב)
+   ============================================================ */
+function viewShiftSummary(){
+  const sh=shiftNow();
+  let h=vhead("סיכום משמרת 📋","לוקח פחות מדקה — וזה עובר למשמרת הבאה");
+  h+=`<div class="field"><label>תאריך</label><input type="date" id="date" value="${todayISO()}"></div>`;
+  h+=`<div class="field"><label>סוג משמרת <span class="req">*</span></label>${seg('shift',['בוקר','ערב'],sh.def)}</div>`;
+  h+=`<div class="field"><label>רמת מעורבות המתאמנים</label>${seg('involve',['גבוהה','בינונית','נמוכה'])}</div>`;
+  h+=`<div class="field"><label>איכות כללית של המשמרת</label>${seg('quality',['מצוין','טוב','סביר','דורש תשומת לב'])}</div>`;
+  h+=`<div class="field"><label>מספר שיעורים שהועברו</label><input type="number" id="classes" min="0" inputmode="numeric" placeholder="למשל 4"></div>`;
+  h+=`<div class="field"><label>חשוב להעביר הלאה ➡️</label><div class="hint">ההעברה למשמרת הבאה — מה שחייבים לדעת</div>
+    <textarea id="handoff" placeholder="מה שמאמן/ת המשמרת הבאה חייב/ת לדעת…"></textarea></div>`;
+  h+=`<div class="field"><label>היו בעיות טכניות/מקצועיות?</label>${segYN('tech','לא')}</div>`;
+  h+=`<div class="field"><label>דווחו פציעות/כאבים? <span class="req">*</span></label>${segYN('injury','לא')}
+    <div id="injury-detail" class="hidden" style="margin-top:10px"><textarea id="injury-txt" placeholder="פירוט הפציעה/כאב — מי, מה, מתי…"></textarea></div></div>`;
+  h+=`<div class="field"><label>מתאמנים שדורשים תשומת לב / מעקב</label><textarea id="attention" placeholder="שמות + למה…"></textarea></div>`;
+  h+=`<div class="field"><label>הערות מקצועיות / דגשים לאימון</label><textarea id="pro" placeholder="דגשים, תנועות, סקיילינג…"></textarea></div>`;
+  h+=`<div class="field"><label>תחושת המשמרת</label>${seg('feel',['מצוינת','סבירה','קשה'])}</div>`;
+  h+=`<div class="field"><label>מתאמנים שבלטו לטובה ⭐</label><textarea id="stars" placeholder="שמות מי שהרשים היום…"></textarea></div>`;
+  h+=`<button class="submit" onclick="submitShift()">שליחה לפיד ✅</button>`;
+  V().innerHTML=h;
+  SEG_HOOK['injury']=v=>document.getElementById('injury-detail').classList.toggle('hidden',v!=='כן');
+}
+async function submitShift(){
+  const shift=segVal('shift'); if(!shift)return toast('בחר/י סוג משמרת');
+  if(!segVal('injury'))return toast('חובה לענות על פציעות/כאבים');
+  await cPush('shift_summaries',{staffId:ME.id,name:ME.name,date:document.getElementById('date').value,shift,
+    involve:segVal('involve'),quality:segVal('quality'),classes:document.getElementById('classes').value,
+    handoff:document.getElementById('handoff').value.trim(),tech:segVal('tech'),injury:segVal('injury'),
+    injuryTxt:document.getElementById('injury-txt').value.trim(),attention:document.getElementById('attention').value.trim(),
+    pro:document.getElementById('pro').value.trim(),feel:segVal('feel'),stars:document.getElementById('stars').value.trim(),
+    status:'pending',reviewedBy:null,reviewedAt:null,ts:Date.now()});
+  sheet('נשלח לפיד! ✅','הסיכום מופיע עכשיו לכל הצוות וממתין לבקרה של וולנטינה.','חזרה לבית',viewHome);
+}
+
+/* ============================================================
+   7.3 סיכום שירות ומכירה (וולנטינה)
+   ============================================================ */
+function viewSalesSummary(){
+  let h=vhead("סיכום שירות/מכירה 🧡","סיכום היום של השירות והמכירה");
+  h+=`<div class="field"><label>תאריך</label><input type="date" id="date" value="${todayISO()}"></div>`;
+  h+=`<div class="field"><label>לידים / פניות שנכנסו</label><input type="number" id="leads" min="0" inputmode="numeric" placeholder="כמות">
+    <textarea id="leadsTxt" style="margin-top:8px" placeholder="פירוט הפניות…"></textarea></div>`;
+  h+=`<div class="field"><label>שיחות מכירה / סגירות</label><textarea id="sales" placeholder="עם מי דיברת, מה נסגר…"></textarea></div>`;
+  h+=`<div class="field"><label>בקשות ביטול / הקפאה / בעיית תשלום</label><textarea id="issues" placeholder="מי ומה…"></textarea></div>`;
+  h+=`<div class="field"><label>משימות שירות פתוחות</label><textarea id="tasks" placeholder="מה נשאר לטפל בו…"></textarea></div>`;
+  h+=`<div class="field"><label>הערות</label><textarea id="notes" placeholder="עוד משהו…"></textarea></div>`;
+  h+=`<button class="submit" onclick="submitSales()">שליחה ✅</button>`;
+  V().innerHTML=h;
+}
+async function submitSales(){
+  await cPush('sales_summaries',{staffId:ME.id,name:ME.name,date:document.getElementById('date').value,
+    leads:document.getElementById('leads').value,leadsTxt:document.getElementById('leadsTxt').value.trim(),
+    sales:document.getElementById('sales').value.trim(),issues:document.getElementById('issues').value.trim(),
+    tasks:document.getElementById('tasks').value.trim(),notes:document.getElementById('notes').value.trim(),ts:Date.now()});
+  sheet('נשמר! ✅','סיכום השירות/מכירה נשמר בפיד.','חזרה לבית',viewHome);
+}
+
+/* ============================================================
+   7.4 הערכת מאמן (L2)
+   ============================================================ */
+const RUBRIC=[
+ {k:'r1',t:'נוכחות, יחס וקשר',w:20,l:['מנותק','נוכח לא יוזם','אנרגטי ומחובר','מוביל אווירה']},
+ {k:'r2',t:'הדגמה ומקצועיות אישית',w:20,l:['שגויה','בסיסית','נקייה עם נק׳ ביצוע','מופתית + מודל אישי']},
+ {k:'r3',t:'ניהול קבוצה וקצב',w:15,l:['כאוטי','פערים','מאורגן וזורם','שליטה מלאה']},
+ {k:'r4',t:'הוראה (Teaching)',w:15,l:['מבלבל','עמוס','ברור וממוקד','cues חדים · progression מושלם']},
+ {k:'r5',t:'ראייה (Seeing)',w:15,l:['מפספס','בולטות בלבד','מזהה מרובים','major-fault-first ומתעדף']},
+ {k:'r6',t:'תיקון וסקיילינג',w:15,l:['לא/שגוי','חלקי','אפקטיבי','מדויק + סקיילינג ששומר על ביצוע']},
+];
+let RUBRIC_SCORES={};
+function viewCoachEval(){
+  RUBRIC_SCORES={};
+  const coaches=Object.entries(STAFF).filter(([id,s])=>s.active&&(s.role==='coach'||s.role==='manager'));
+  let h=vhead("הערכת מאמן ⭐","מבוסס מתודולוגיית CrossFit L2");
+  h+=`<div class="field"><label>תאריך</label><input type="date" id="date" value="${todayISO()}"></div>`;
+  h+=`<div class="field"><label>מוערך/ת <span class="req">*</span></label><select id="ratee"><option value="">בחר/י מאמן/ת…</option>`+
+    coaches.map(([id,s])=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('')+`</select></div>`;
+  h+=`<div class="field"><label>מעריך/ה</label><input type="text" value="${esc(ME.name)}" disabled></div>`;
+  h+=`<div class="field"><label>הקשר</label>${seg('ctx',['תצפית חפיפה','אימון בפיקוח','אימון מלא'])}</div>`;
+  h+=`<div class="field"><label>האימון והתנועות שנצפו</label><textarea id="wod" placeholder="למשל: Fran — Thruster + Pull-up…"></textarea></div>`;
+  h+=`<div class="sec-title">רובריקה — 1 עד 4</div>`;
+  h+=RUBRIC.map(r=>`<div class="rubric"><div class="rt">${r.t}</div><div class="rw">משקל ${r.w}%</div>
+    <div class="nums">`+[1,2,3,4].map(n=>`<button type="button" class="nb" data-r="${r.k}" data-n="${n}" onclick="rubricPick('${r.k}',${n},this)">${n}</button>`).join('')+
+    `</div><div class="rl" id="rl-${r.k}"></div></div>`).join('');
+  h+=`<div class="sec-title">בטיחות והיררכיה</div>`;
+  h+=`<div class="field"><label>היו סיכוני בטיחות שלא טופלו? <span class="req">*</span></label><div class="hint">"כן" = דגל אדום, ללא תלות בציון</div>${segYN('safety','לא')}</div>`;
+  h+=`<div class="field"><label>מכניקה → עקביות → אינטנסיביות: נשמר הסדר?</label>${seg('hier',['כן','חלקית','לא'])}</div>`;
+  h+=`<div class="sec-title">איכותני</div>`;
+  h+=`<div class="field"><label>חוזקות</label><textarea id="strong"></textarea></div>`;
+  h+=`<div class="field"><label>נקודות לשיפור</label><textarea id="improve"></textarea></div>`;
+  h+=`<div class="field"><label>הערות / סיכום שיחה</label><textarea id="talk"></textarea></div>`;
+  h+=`<div class="field"><label>יעד אחד קונקרטי להמשך 🎯</label><input type="text" id="goal" placeholder="מטרה אחת ברורה…"></div>`;
+  h+=`<div class="sec-title">מסקנה</div>`;
+  h+=`<div class="field"><label>המלצה</label>${seg('rec',['מוכן לשלב הבא','להמשיך חפיפה','דורש שיחה'])}</div>`;
+  h+=`<div class="field"><label>תאריך מעקב</label><input type="date" id="followup"></div>`;
+  h+=`<div class="score-box"><div class="sv" id="score">—</div><div class="sl">ציון משוקלל (מתוך 4)</div>
+    <div class="verdict" id="verdict" style="display:none"></div></div>`;
+  h+=`<button class="submit" onclick="submitEval()">שמירת הערכה ✅</button>`;
+  V().innerHTML=h;
+  SEG_HOOK['safety']=()=>updateScore();
+}
+function rubricPick(k,n,btn){ RUBRIC_SCORES[k]=n;
+  [...btn.parentElement.children].forEach(c=>c.classList.remove('sel'));btn.classList.add('sel');
+  const r=RUBRIC.find(x=>x.k===k); document.getElementById('rl-'+k).textContent=r.l[n-1]; updateScore(); }
+function calcScore(){ let s=0,haveAll=true; RUBRIC.forEach(r=>{ if(RUBRIC_SCORES[r.k])s+=RUBRIC_SCORES[r.k]*r.w/100; else haveAll=false; }); return {s,haveAll}; }
+function updateScore(){
+  const {s,haveAll}=calcScore(); document.getElementById('score').textContent=haveAll?s.toFixed(2):'—';
+  const vd=document.getElementById('verdict'); const safety=segVal('safety');
+  if(haveAll){ const pass=(s>=3.0 && safety!=='כן'); vd.style.display='block';
+    vd.className='verdict '+(pass?'ok':'no'); vd.textContent=pass?'רשאי/ת להעביר לבד ✅':(safety==='כן'?'דגל בטיחות אדום ⛔':'עדיין לא — להמשיך חפיפה ⛔'); }
+  else vd.style.display='none';
+}
+async function submitEval(){
+  if(!document.getElementById('ratee').value)return toast('בחר/י מי מוערך/ת');
+  const {s,haveAll}=calcScore(); if(!haveAll)return toast('מלא/י את כל 6 הקריטריונים');
+  if(!segVal('safety'))return toast('ענה/י על שאלת הבטיחות');
+  const safety=segVal('safety'), pass=(s>=3.0 && safety!=='כן');
+  await cPush('coach_evaluations',{ratee:document.getElementById('ratee').value,rater:ME.name,date:document.getElementById('date').value,
+    ctx:segVal('ctx'),wod:document.getElementById('wod').value.trim(),scores:{...RUBRIC_SCORES},weighted:+s.toFixed(2),
+    safety,hier:segVal('hier'),strong:document.getElementById('strong').value.trim(),improve:document.getElementById('improve').value.trim(),
+    talk:document.getElementById('talk').value.trim(),goal:document.getElementById('goal').value.trim(),rec:segVal('rec'),
+    followup:document.getElementById('followup').value,soloOk:pass,ts:Date.now()});
+  sheet(pass?'הערכה נשמרה ✅':'הערכה נשמרה','ציון משוקלל: '+s.toFixed(2)+' מתוך 4'+(pass?' · רשאי/ת להעביר לבד':' · עדיין בחפיפה'),'חזרה לבית',viewHome);
+}
+
+/* ============================================================
+   7.5 דיווח מלאי
+   ============================================================ */
+function invItems(){ return Object.entries(INV).filter(([id,i])=>i.active).sort((a,b)=>(a[1].order||99)-(b[1].order||99)); }
+function viewInventoryReport(){
+  let h=vhead("דיווח מלאי 📦","מה תקין, מה עומד להיגמר, מה נגמר");
+  h+=`<div class="check-list">`+invItems().map(([id,it])=>
+    `<div class="rubric" data-id="${id}"><div class="rt">${esc(it.name)}</div>
+     <div class="seg" data-group="inv-${id}">
+       <button type="button" class="seg-b sel" data-val="ok" onclick="segPick(this,'inv-${id}')">תקין</button>
+       <button type="button" class="seg-b" data-val="low" onclick="segPick(this,'inv-${id}')">עומד להיגמר</button>
+       <button type="button" class="seg-b" data-val="out" onclick="segPick(this,'inv-${id}')">נגמר</button>
+     </div></div>`).join('')+`</div>`;
+  h+=`<div class="field" style="margin-top:14px"><label>הערות</label><textarea id="invNote" placeholder="פרטים על מה שחסר…"></textarea></div>`;
+  h+=`<button class="submit" onclick="submitInv()">שליחת דיווח ✅</button>`;
+  V().innerHTML=h;
+}
+async function submitInv(){
+  const items={}; invItems().forEach(([id])=>{ items[id]=segVal('inv-'+id)||'ok'; });
+  await cPush('inventory_reports',{staffId:ME.id,name:ME.name,date:todayISO(),time:nowTime(),items,
+    note:document.getElementById('invNote').value.trim(),ts:Date.now()});
+  sheet('דיווח נשלח! ✅','"מצב מלאי נוכחי" התעדכן לכולם.','חזרה לבית',viewHome);
+}
+
+/* ============================================================
+   7.6 צ'קליסט נער עזר (מאוחד: תחזוקה + מלאי + משימות)
+   ============================================================ */
+function viewHelper(){
+  const items=checklistItems('maint');
+  let h=vhead("צ'קליסט נער עזר 🧹","תחזוקה + מלאי + משימות היום");
+  h+=`<div class="sec-title">משימות תחזוקה</div>`;
+  h+=`<div class="check-progress" id="cprog">0 / ${items.length} סומנו</div>`;
+  h+=`<div class="check-list">`+items.map(([id,c])=>
+    `<div class="check" data-id="${id}" onclick="toggleCheck(this)"><div class="box">✓</div>
+      <div><div class="txt">${esc(c.text)}</div>${c.help?`<div class="help">${esc(c.help)}</div>`:''}</div></div>`).join('')+`</div>`;
+  h+=`<div class="sec-title">מלאי — מה חסר?</div>`;
+  h+=`<div class="check-list">`+invItems().map(([id,it])=>
+    `<div class="rubric" data-id="${id}"><div class="rt">${esc(it.name)}</div>
+     <div class="seg" data-group="inv-${id}">
+       <button type="button" class="seg-b sel" data-val="ok" onclick="segPick(this,'inv-${id}')">תקין</button>
+       <button type="button" class="seg-b" data-val="low" onclick="segPick(this,'inv-${id}')">עומד להיגמר</button>
+       <button type="button" class="seg-b" data-val="out" onclick="segPick(this,'inv-${id}')">נגמר</button>
+     </div></div>`).join('')+`</div>`;
+  h+=`<div class="field" style="margin-top:14px"><label>משימות היום / הערות</label><textarea id="helperTasks" placeholder="מה עשית / מה נשאר…"></textarea></div>`;
+  h+=`<button class="submit" onclick="submitHelper()">שליחה ✅</button>`;
+  V().innerHTML=h;
+}
+async function submitHelper(){
+  const checked=[...V().querySelectorAll('.check.on')].map(e=>e.dataset.id);
+  const items={}; invItems().forEach(([id])=>{ items[id]=segVal('inv-'+id)||'ok'; });
+  const note=document.getElementById('helperTasks').value.trim();
+  await Promise.all([
+    cPush('checklist_submissions',{staffId:ME.id,name:ME.name,type:'maint',shift:'—',date:todayISO(),time:nowTime(),checked,total:V().querySelectorAll('.check').length,note,ts:Date.now()}),
+    cPush('inventory_reports',{staffId:ME.id,name:ME.name,date:todayISO(),time:nowTime(),items,note,ts:Date.now()})
+  ]);
+  sheet('נשלח! ✅',`כל הכבוד ${esc(ME.name.split(' ')[0])} 🧡`,'חזרה לבית',viewHome);
+}
+
+/* ============================================================
+   פיד סיכומים
+   ============================================================ */
+async function viewFeed(){
+  loading();
+  const [shifts,sales]=await Promise.all([cGet('shift_summaries'),cGet('sales_summaries')]);
+  const items=[];
+  Object.entries(shifts||{}).forEach(([id,s])=>items.push({id,kind:'shift',...s}));
+  Object.entries(sales||{}).forEach(([id,s])=>items.push({id,kind:'sales',...s}));
+  items.sort((a,b)=>(b.ts||0)-(a.ts||0));
+  let h=vhead("פיד סיכומים 🗂️","מה קרה במשמרות — הכי חדש למעלה");
+  if(!items.length){ h+=`<div class="empty"><span class="e">🗂️</span>עוד אין סיכומים.<br>המאמנים ימלאו בסוף המשמרת.</div>`; V().innerHTML=h; return; }
+  h+=`<div class="card-list">`+items.map(it=>it.kind==='shift'?shiftCard(it):salesCard(it)).join('')+`</div>`;
+  V().innerHTML=h;
+}
+function shiftCard(s){
+  const sc=s.shift==='בוקר'?'morning':'evening';
+  let h=`<div class="rec"><div class="rtop"><span class="who">${esc(s.name)}</span>
+    <span class="chip ${sc}">${esc(s.shift)}</span>
+    <span class="chip ${s.status==='done'?'done':'pending'}">${s.status==='done'?'טופל ✓':'ממתין לבקרה'}</span>
+    ${s.injury==='כן'?'<span class="chip injury">פציעה ⚠️</span>':''}
+    <span class="spacer"></span><span class="meta">${fmtDate(s.date)}</span></div>`;
+  if(s.handoff) h+=`<div class="handoff"><b>חשוב להעביר הלאה ➡️</b>${esc(s.handoff)}</div>`;
+  const rows=[['מעורבות',s.involve],['איכות',s.quality],['שיעורים',s.classes],['תחושה',s.feel]].filter(r=>r[1]);
+  h+=rows.map(r=>`<div class="row"><b>${r[0]}:</b> ${esc(r[1])}</div>`).join('');
+  if(s.injury==='כן'&&s.injuryTxt) h+=`<div class="row"><b>פציעה:</b> ${esc(s.injuryTxt)}</div>`;
+  if(s.attention) h+=`<div class="row"><b>למעקב:</b> ${esc(s.attention)}</div>`;
+  if(s.pro) h+=`<div class="row"><b>מקצועי:</b> ${esc(s.pro)}</div>`;
+  if(s.stars) h+=`<div class="row"><b>בלטו ⭐:</b> ${esc(s.stars)}</div>`;
+  h+=`</div>`; return h;
+}
+function salesCard(s){
+  let h=`<div class="rec"><div class="rtop"><span class="who">${esc(s.name)}</span>
+    <span class="chip gray">שירות/מכירה 🧡</span><span class="spacer"></span><span class="meta">${fmtDate(s.date)}</span></div>`;
+  const rows=[['לידים',s.leads],['מכירות',s.sales],['ביטול/הקפאה',s.issues],['משימות פתוחות',s.tasks],['הערות',s.notes]].filter(r=>r[1]);
+  h+=rows.map(r=>`<div class="row"><b>${r[0]}:</b> ${esc(r[1])}</div>`).join('');
+  if(s.leadsTxt) h+=`<div class="row"><b>פירוט לידים:</b> ${esc(s.leadsTxt)}</div>`;
+  h+=`</div>`; return h;
+}
+
+/* ============================================================
+   תור בקרה (וולנטינה / ניהול)
+   ============================================================ */
+async function viewReview(){
+  loading();
+  const shifts=await cGet('shift_summaries')||{};
+  const pending=Object.entries(shifts).map(([id,s])=>({id,...s})).filter(s=>s.status==='pending').sort((a,b)=>(a.ts||0)-(b.ts||0));
+  let h=vhead("תור בקרה 🔎","עבור/י, עדכן/י בארבוקס, וסמן/י טופל");
+  if(!pending.length){ h+=`<div class="empty"><span class="e">✨</span>אין מה לבקר — הכל טופל!</div>`; V().innerHTML=h; return; }
+  h+=`<div class="card-list">`+pending.map(s=>{
+    const c=shiftCard(s);            // מסתיים ב-</div>
+    return c.slice(0,-6)+`<button class="mark-done" onclick="markDone('${s.id}')">✓ עודכן בארבוקס — סמן טופל</button></div>`;
+  }).join('')+`</div>`;
+  V().innerHTML=h;
+}
+async function markDone(id){
+  await cPatch('shift_summaries/'+id,{status:'done',reviewedBy:ME.name,reviewedAt:Date.now()});
+  toast('סומן טופל ✓'); viewReview();
+}
+
+/* ============================================================
+   מצב מלאי (נגזר מהדיווח האחרון לכל פריט)
+   ============================================================ */
+async function viewInventoryStatus(){
+  loading();
+  const reports=await cGet('inventory_reports')||{};
+  const list=Object.values(reports).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  const current={}; // itemId -> {status,date,name}
+  list.forEach(r=>{ if(r.items) Object.entries(r.items).forEach(([iid,st])=>{ if(!current[iid]) current[iid]={status:st,by:r.name,date:r.date}; }); });
+  const items=invItems();
+  const rank={out:0,low:1,ok:2,na:3};
+  const rows=items.map(([id,it])=>({id,name:it.name,...(current[id]||{status:'na'})}))
+    .sort((a,b)=>(rank[a.status]??3)-(rank[b.status]??3));
+  let h=vhead("מצב מלאי 🚦","נגזר מהדיווח האחרון · חוסר צף למעלה");
+  const label={ok:'תקין',low:'עומד להיגמר',out:'נגמר',na:'אין דיווח'};
+  h+=`<div class="card-list">`+rows.map(r=>
+    `<div class="inv-row ${r.status}"><span class="dot ${r.status==='na'?'':r.status}"></span>
+      <span class="nm">${esc(r.name)}</span>
+      <span class="st ${r.status}">${label[r.status]}${r.date&&r.status!=='na'?` · ${fmtDate(r.date)}`:''}</span></div>`).join('')+`</div>`;
+  V().innerHTML=h;
+}
+
+/* ============================================================
+   דשבורד ניהולי
+   ============================================================ */
+async function viewDashboard(){
+  loading();
+  const [shifts,sales,reports,evals,subs]=await Promise.all([
+    cGet('shift_summaries'),cGet('sales_summaries'),cGet('inventory_reports'),cGet('coach_evaluations'),cGet('checklist_submissions')]);
+  const today=todayISO();
+  const sh=Object.values(shifts||{}), pend=sh.filter(x=>x.status==='pending').length;
+  const injuriesToday=sh.filter(x=>x.date===today&&x.injury==='כן');
+  const todaySubs=Object.values(subs||{}).filter(x=>x.date===today).length;
+  // מלאי חסר
+  const rep=Object.values(reports||{}).sort((a,b)=>(b.ts||0)-(a.ts||0)); const cur={};
+  rep.forEach(r=>{ if(r.items)Object.entries(r.items).forEach(([iid,st])=>{ if(!(iid in cur))cur[iid]=st; }); });
+  const invAlerts=Object.entries(cur).filter(([iid,st])=>st==='out'||st==='low');
+  const outCount=Object.values(cur).filter(s=>s==='out').length;
+  const evList=Object.values(evals||{}).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  let h=vhead("דשבורד ניהולי 📊","מבט על — היום");
+  h+=`<div class="kpis">
+    <div class="kpi ${pend?'alert':'good'}"><div class="v">${pend}</div><div class="l">ממתינים לבקרה</div></div>
+    <div class="kpi ${injuriesToday.length?'alert':'good'}"><div class="v">${injuriesToday.length}</div><div class="l">פציעות היום</div></div>
+    <div class="kpi ${outCount?'alert':''}"><div class="v">${outCount}</div><div class="l">פריטים שנגמרו</div></div>
+    <div class="kpi"><div class="v">${todaySubs}</div><div class="l">צ'קליסטים היום</div></div>
+  </div>`;
+  if(injuriesToday.length){ h+=`<div class="sec-title">⚠️ פציעות שדווחו היום</div><div class="card-list">`+
+    injuriesToday.map(x=>`<div class="rec"><div class="rtop"><span class="who">${esc(x.name)}</span><span class="chip evening">${esc(x.shift)}</span></div><div class="row">${esc(x.injuryTxt||'—')}</div></div>`).join('')+`</div>`; }
+  if(invAlerts.length){ h+=`<div class="sec-title">📦 מלאי לתשומת לב</div><div class="card-list">`+
+    invAlerts.sort((a,b)=>(a[1]==='out'?0:1)-(b[1]==='out'?0:1)).map(([iid,st])=>{ const it=INV[iid]||{name:iid};
+      return `<div class="inv-row ${st}"><span class="dot ${st}"></span><span class="nm">${esc(it.name)}</span><span class="st ${st}">${st==='out'?'נגמר':'עומד להיגמר'}</span></div>`; }).join('')+`</div>`; }
+  h+=`<div class="sec-title">⭐ הערכות מאמנים אחרונות</div>`;
+  if(!evList.length){ h+=`<div class="empty" style="padding:24px"><span class="e">⭐</span>עוד אין הערכות</div>`; }
+  else{ h+=`<div class="card-list">`+evList.slice(0,6).map(e=>
+    `<div class="rec"><div class="rtop"><span class="who">${esc(e.ratee)}</span>
+      <span class="chip ${e.soloOk?'done':'pending'}">${(e.weighted||0).toFixed(2)} / 4</span>
+      ${e.safety==='כן'?'<span class="chip injury">בטיחות ⚠️</span>':''}
+      <span class="spacer"></span><span class="meta">${esc(e.rater)} · ${fmtDate(e.date)}</span></div>
+      ${e.goal?`<div class="row"><b>יעד:</b> ${esc(e.goal)}</div>`:''}
+      <div class="row"><b>מסקנה:</b> ${e.soloOk?'רשאי/ת להעביר לבד ✅':'עדיין בחפיפה'}</div></div>`).join('')+`</div>`; }
+  V().innerHTML=h;
+}
+
+/* ============================================================
+   מסך ניהול (אדמין)
+   ============================================================ */
+let ADMIN_TAB='staff', ADMIN_CK='open';
+function viewAdmin(){
+  let h=vhead("מסך ניהול ⚙️","עריכת צוות · צ'קליסטים · מלאי — נשמר לכולם");
+  h+=`<div class="tabs">
+    <button class="tab ${ADMIN_TAB==='staff'?'sel':''}" onclick="ADMIN_TAB='staff';viewAdmin()">צוות</button>
+    <button class="tab ${ADMIN_TAB==='checks'?'sel':''}" onclick="ADMIN_TAB='checks';viewAdmin()">צ'קליסטים</button>
+    <button class="tab ${ADMIN_TAB==='inv'?'sel':''}" onclick="ADMIN_TAB='inv';viewAdmin()">מלאי</button></div>`;
+  h+=`<div id="adm-body"></div>`;
+  V().innerHTML=h;
+  if(ADMIN_TAB==='staff')admStaff(); else if(ADMIN_TAB==='checks')admChecks(); else admInv();
+}
+/* --- צוות --- */
+function admStaff(){
+  const list=Object.entries(STAFF).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
+  const roleOpts=Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v.he}</option>`).join('');
+  let h=list.map(([id,s])=>`<div class="adm-row" data-id="${id}">
+    <div class="r1"><input type="text" class="f-name" value="${esc(s.name)}" placeholder="שם" style="flex:1">
+      <input type="text" class="f-pin" value="${esc(s.pin)}" placeholder="PIN" style="width:74px" inputmode="numeric" maxlength="4"></div>
+    <div class="r1"><select class="f-role" style="flex:1">${roleOpts.replace(`value="${s.role}"`,`value="${s.role}" selected`)}</select>
+      <label class="toggle"><input type="checkbox" class="f-active" ${s.active?'checked':''}>פעיל</label>
+      <button class="save" onclick="saveStaff('${id}')">שמור</button>
+      <button class="del" onclick="delStaff('${id}')">מחק</button></div></div>`).join('');
+  h+=`<button class="add-btn" onclick="addStaff()">＋ הוספת איש צוות</button>`;
+  document.getElementById('adm-body').innerHTML=h;
+}
+async function saveStaff(id){
+  const row=document.querySelector(`.adm-row[data-id="${id}"]`);
+  const obj={name:row.querySelector('.f-name').value.trim(),pin:row.querySelector('.f-pin').value.trim(),
+    role:row.querySelector('.f-role').value,active:row.querySelector('.f-active').checked,order:STAFF[id].order||99};
+  await cPut('staff/'+id,obj); STAFF[id]=obj; toast('נשמר ✓');
+}
+async function addStaff(){
+  const id='s_'+Date.now(), order=Object.keys(STAFF).length+1;
+  const obj={name:'חדש',pin:'0000',role:'coach',active:true,order}; await cPut('staff/'+id,obj); STAFF[id]=obj; admStaff();
+}
+async function delStaff(id){
+  if(!confirm('למחוק את '+STAFF[id].name+'?'))return;
+  await cDel('staff/'+id); delete STAFF[id]; admStaff();
+}
+/* --- צ'קליסטים --- */
+function admChecks(){
+  const types={open:"פתיחה 🌅",close:"סגירה 🌙",maint:"תחזוקה 🧹"};
+  let h=`<div class="sub-tabs">`+Object.entries(types).map(([k,v])=>
+    `<button class="sub-tab ${ADMIN_CK===k?'sel':''}" onclick="ADMIN_CK='${k}';admChecks()">${v}</button>`).join('')+`</div>`;
+  const list=Object.entries(CHECKS).filter(([id,c])=>c.type===ADMIN_CK).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
+  h+=list.map(([id,c])=>`<div class="adm-row" data-id="${id}">
+    <div class="r1"><input type="text" class="f-text" value="${esc(c.text)}" placeholder="המשימה" style="flex:1"></div>
+    <div class="r1"><input type="text" class="f-help" value="${esc(c.help||'')}" placeholder="הסבר (רשות)" style="flex:1">
+      <label class="toggle"><input type="checkbox" class="f-active" ${c.active?'checked':''}>פעיל</label>
+      <button class="save" onclick="saveCheck('${id}')">שמור</button>
+      <button class="del" onclick="delCheck('${id}')">מחק</button></div></div>`).join('');
+  h+=`<button class="add-btn" onclick="addCheck()">＋ הוספת משימה ל${types[ADMIN_CK]}</button>`;
+  document.getElementById('adm-body').innerHTML=h;
+}
+async function saveCheck(id){
+  const row=document.querySelector(`.adm-row[data-id="${id}"]`);
+  const obj={type:CHECKS[id].type,text:row.querySelector('.f-text').value.trim(),help:row.querySelector('.f-help').value.trim(),
+    active:row.querySelector('.f-active').checked,order:CHECKS[id].order||99};
+  await cPut('checklist_items/'+id,obj); CHECKS[id]=obj; toast('נשמר ✓');
+}
+async function addCheck(){
+  const id='c_'+Date.now(), order=Object.values(CHECKS).filter(c=>c.type===ADMIN_CK).length+1;
+  const obj={type:ADMIN_CK,text:'משימה חדשה',help:'',active:true,order}; await cPut('checklist_items/'+id,obj); CHECKS[id]=obj; admChecks();
+}
+async function delCheck(id){ if(!confirm('למחוק את המשימה?'))return; await cDel('checklist_items/'+id); delete CHECKS[id]; admChecks(); }
+/* --- מלאי --- */
+function admInv(){
+  const list=Object.entries(INV).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
+  let h=list.map(([id,it])=>`<div class="adm-row" data-id="${id}">
+    <div class="r1"><input type="text" class="f-name" value="${esc(it.name)}" placeholder="שם הפריט" style="flex:1">
+      <label class="toggle"><input type="checkbox" class="f-active" ${it.active?'checked':''}>פעיל</label>
+      <button class="save" onclick="saveInv('${id}')">שמור</button>
+      <button class="del" onclick="delInv('${id}')">מחק</button></div></div>`).join('');
+  h+=`<button class="add-btn" onclick="addInv()">＋ הוספת פריט מלאי</button>`;
+  document.getElementById('adm-body').innerHTML=h;
+}
+async function saveInv(id){
+  const row=document.querySelector(`.adm-row[data-id="${id}"]`);
+  const obj={name:row.querySelector('.f-name').value.trim(),active:row.querySelector('.f-active').checked,order:INV[id].order||99};
+  await cPut('inventory_items/'+id,obj); INV[id]=obj; toast('נשמר ✓');
+}
+async function addInv(){
+  const id='i_'+Date.now(), order=Object.keys(INV).length+1;
+  const obj={name:'פריט חדש',active:true,order}; await cPut('inventory_items/'+id,obj); INV[id]=obj; admInv();
+}
+async function delInv(id){ if(!confirm('למחוק את הפריט?'))return; await cDel('inventory_items/'+id); delete INV[id]; admInv(); }
+
+/* ============================================================
+   אתחול
+   ============================================================ */
 (async function init(){
   buildPad();
-  await loadStaff();
-  const saved = localStorage.getItem('bux_ops_me');
-  if(saved && STAFF[saved] && STAFF[saved].active){
-    loginAs(saved);
-  }else{
-    renderStaffPick();
-  }
+  await loadConfig();
+  const saved=localStorage.getItem('bux_ops_me');
+  if(saved&&STAFF[saved]&&STAFF[saved].active) loginAs(saved);
+  else renderStaffPick();
 })();
 </script>
 </body>
