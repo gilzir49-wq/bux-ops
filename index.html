@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c1c1c">
+<title>תפעול · קרוספיט באקס</title>
+
+<!-- ==== PWA (הוסף למסך הבית) ==== -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="תפעול באקס">
+
+<style>
+:root{
+  --bg:#1c1c1c; --card:#262626; --card2:#2f2f2f; --line:#3a3a3a;
+  --orange:#fdab3d; --orange-dim:#c9832d;
+  --text:#f4f4f4; --muted:#9a9a9a;
+  --green:#3fb950; --yellow:#f1c93b; --red:#f26d6d;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Rubik,Arial,sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; line-height:1.5;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+button{font-family:inherit}
+.hidden{display:none!important}
+
+/* ===== מסך התחברות ===== */
+#screen-login{
+  min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:24px 18px;
+}
+.brand{ text-align:center; margin-bottom:26px }
+.brand .logo{
+  width:74px;height:74px;border-radius:20px;margin:0 auto 12px;
+  background:linear-gradient(135deg,var(--orange),#e6941f);
+  display:flex;align-items:center;justify-content:center;font-size:38px;
+  box-shadow:0 8px 24px rgba(253,171,61,.28);
+}
+.brand h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.3px}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+
+.who{ width:100%; max-width:440px }
+.who h2{font-size:15px;color:var(--muted);font-weight:600;margin:0 0 12px;text-align:center}
+.staff-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
+.staff-btn{
+  background:var(--card); border:1px solid var(--line); color:var(--text);
+  padding:16px 12px; border-radius:16px; font-size:16px; font-weight:700;
+  cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;
+  transition:.12s;
+}
+.staff-btn:active{transform:scale(.97)}
+.staff-btn .rl{font-size:12px;font-weight:600;color:var(--muted)}
+.staff-btn .av{
+  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:15px;font-weight:800;color:#1c1c1c;
+}
+
+/* ===== לוח PIN ===== */
+#pin-wrap{width:100%;max-width:360px;text-align:center}
+#pin-wrap .name{font-size:20px;font-weight:800;margin-bottom:2px}
+#pin-wrap .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:22px}
+.pin-dots .d{width:16px;height:16px;border-radius:50%;border:2px solid var(--orange)}
+.pin-dots .d.on{background:var(--orange)}
+.pin-dots.err .d{border-color:var(--red);animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;margin:0 auto}
+.pad button{
+  aspect-ratio:1/1;border-radius:50%;border:1px solid var(--line);
+  background:var(--card);color:var(--text);font-size:26px;font-weight:700;cursor:pointer;
+}
+.pad button:active{background:var(--card2)}
+.pad .ghost{background:transparent;border:none}
+.stay{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;color:var(--muted);font-size:14px}
+.stay input{width:18px;height:18px;accent-color:var(--orange)}
+.link-btn{background:none;border:none;color:var(--orange);font-size:14px;cursor:pointer;margin-top:16px}
+
+/* ===== אפליקציה ===== */
+#screen-app{max-width:520px;margin:0 auto;min-height:100vh}
+.topbar{
+  position:sticky;top:0;z-index:5;background:rgba(28,28,28,.92);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  display:flex;align-items:center;gap:12px;
+}
+.topbar .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:800;color:#1c1c1c;font-size:16px;flex:0 0 auto}
+.topbar .who-t{flex:1;min-width:0}
+.topbar .who-t .n{font-weight:800;font-size:16px}
+.topbar .who-t .r{color:var(--muted);font-size:12.5px}
+.topbar .out{background:var(--card);border:1px solid var(--line);color:var(--muted);
+  border-radius:10px;padding:8px 10px;font-size:13px;cursor:pointer}
+
+.content{padding:16px 16px 40px}
+.shift-banner{
+  border-radius:14px;padding:12px 14px;margin-bottom:18px;font-weight:700;
+  display:flex;align-items:center;gap:10px;font-size:14.5px;
+}
+.shift-banner.morning{background:rgba(241,201,59,.14);border:1px solid rgba(241,201,59,.35);color:var(--yellow)}
+.shift-banner.evening{background:rgba(253,171,61,.14);border:1px solid rgba(253,171,61,.35);color:var(--orange)}
+.shift-banner.off{background:var(--card);border:1px solid var(--line);color:var(--muted)}
+.shift-banner .big{font-size:20px}
+
+.sec-title{font-size:13px;color:var(--muted);font-weight:700;margin:22px 2px 10px;letter-spacing:.4px}
+.sec-title:first-of-type{margin-top:6px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.action{
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:16px 14px;text-align:right;cursor:pointer;position:relative;
+  display:flex;flex-direction:column;gap:8px;min-height:104px;transition:.12s;
+}
+.action:active{transform:scale(.98);background:var(--card2)}
+.action .ic{font-size:26px}
+.action .lb{font-weight:800;font-size:15px;line-height:1.25}
+.action .ds{font-size:12px;color:var(--muted);font-weight:500}
+.action.wide{grid-column:1/-1;flex-direction:row;align-items:center;min-height:auto}
+.action.wide .ic{font-size:24px}
+.action.primary{border-color:var(--orange-dim);background:linear-gradient(160deg,rgba(253,171,61,.16),var(--card))}
+.badge-soon{position:absolute;top:10px;left:10px;background:var(--card2);color:var(--muted);
+  font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:20px;border:1px solid var(--line)}
+
+/* ===== מודל ===== */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;
+  align-items:flex-end;justify-content:center;animation:fade .15s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;
+  padding:26px 22px calc(30px + env(safe-area-inset-bottom));border-top:1px solid var(--line);
+  animation:up .2s}
+@keyframes up{from{transform:translateY(40px)}to{transform:translateY(0)}}
+.sheet .grip{width:40px;height:4px;background:var(--line);border-radius:4px;margin:0 auto 18px}
+.sheet h3{margin:0 0 6px;font-size:19px}
+.sheet p{margin:0 0 20px;color:var(--muted);font-size:14.5px}
+.sheet .ok{width:100%;background:var(--orange);color:#1c1c1c;border:none;border-radius:14px;
+  padding:15px;font-size:16px;font-weight:800;cursor:pointer}
+
+.foot{text-align:center;color:#5a5a5a;font-size:12px;padding:24px 0 30px}
+.foot .heart{color:var(--orange)}
+</style>
+</head>
+<body>
+
+<!-- =================== מסך התחברות =================== -->
+<section id="screen-login">
+  <div class="brand">
+    <div class="logo">🏋️</div>
+    <h1>תפעול · קרוספיט באקס</h1>
+    <p>המקום שבו המשמרות מדברות זו עם זו</p>
+  </div>
+
+  <!-- בחירת שם -->
+  <div class="who" id="who-pick">
+    <h2>מי מתחבר/ת? 🧡</h2>
+    <div class="staff-grid" id="staff-grid"></div>
+  </div>
+
+  <!-- לוח PIN -->
+  <div class="who hidden" id="pin-wrap">
+    <div class="name" id="pin-name"></div>
+    <div class="sub">הקש/י את הקוד האישי (4 ספרות)</div>
+    <div class="pin-dots" id="pin-dots"><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div></div>
+    <div class="pad" id="pad"></div>
+    <label class="stay"><input type="checkbox" id="stay" checked> הישאר/י מחובר/ת במכשיר הזה</label>
+    <button class="link-btn" onclick="backToPick()">← חזרה לרשימה</button>
+  </div>
+</section>
+
+<!-- =================== מסך אפליקציה =================== -->
+<section id="screen-app" class="hidden">
+  <div class="topbar">
+    <div class="av" id="t-av"></div>
+    <div class="who-t"><div class="n" id="t-name"></div><div class="r" id="t-role"></div></div>
+    <button class="out" onclick="logout()">יציאה</button>
+  </div>
+  <div class="content" id="home"></div>
+  <div class="foot">קרוספיט באקס · תפעול <span class="heart">🧡</span></div>
+</section>
+
+<script>
+/* ============================================================
+   ⚙️  הגדרות ונתונים — הכל נשמר בענן (Firebase) ומסונכרן לכולם
+   ============================================================ */
+const CLOUD = {
+  base: "https://command-center-gal-default-rtdb.europe-west1.firebasedatabase.app",
+  node: "bux-ops"
+};
+
+// נתוני גיבוי מקומיים — משמשים רק אם הענן ריק (כדי שתמיד יופיע משהו נכון)
+const FALLBACK_STAFF = {
+  s1:{name:"גל זוהר",role:"manager",pin:"1000",active:true,order:1},
+  s2:{name:"רחל זוהר",role:"manager",pin:"2000",active:true,order:2},
+  s3:{name:"וולנטינה",role:"sales",pin:"3000",active:true,order:3},
+  s4:{name:"שיר",role:"coach",pin:"1111",active:true,order:4},
+  s5:{name:"פיני",role:"coach",pin:"2222",active:true,order:5},
+  s6:{name:"טל",role:"coach",pin:"3333",active:true,order:6},
+  s7:{name:"טלי",role:"coach",pin:"4444",active:true,order:7},
+  s8:{name:"קורן",role:"coach",pin:"5555",active:true,order:8},
+  s9:{name:"אריאל",role:"helper",pin:"6666",active:true,order:9},
+};
+
+// שמות התפקידים בעברית + צבע אווטאר
+const ROLES = {
+  manager:{he:"ניהול",     color:"#fdab3d"},
+  coach:  {he:"מאמן/ת",    color:"#3fb950"},
+  sales:  {he:"שירות ומכירה",color:"#f1c93b"},
+  helper: {he:"נער עזר",   color:"#6db3f2"},
+};
+
+/* ============================================================
+   פעולות הבית — לפי תפקיד. (הטפסים עצמם ייבנו בשלב הבא — "בקרוב")
+   ============================================================ */
+const ACTIONS = {
+  do:{ // דברים שממלאים
+    'checklist-open': {ic:"🌅",lb:"צ'קליסט פתיחה",ds:"פתיחת משמרת"},
+    'checklist-close':{ic:"🌙",lb:"צ'קליסט סגירה",ds:"סגירת משמרת"},
+    'shift-summary':  {ic:"📋",lb:"סיכום משמרת",  ds:"הלב של המשמרת",primary:true},
+    'coach-eval':     {ic:"⭐",lb:"הערכת מאמן",   ds:"מבוסס L2"},
+    'sales-summary':  {ic:"🧡",lb:"סיכום שירות/מכירה",ds:"סיכום היום",primary:true},
+    'helper-checklist':{ic:"🧹",lb:"צ'קליסט נער עזר",ds:"תחזוקה + מלאי",primary:true},
+    'inventory':      {ic:"📦",lb:"דיווח מלאי",   ds:"מה חסר?"},
+  },
+  view:{ // דברים שצופים בהם
+    'feed':           {ic:"🗂️",lb:"פיד סיכומים",  ds:"מה קרה במשמרות"},
+    'review':         {ic:"🔎",lb:"תור בקרה",      ds:"לעדכן בארבוקס"},
+    'inventory-status':{ic:"🚦",lb:"מצב מלאי",     ds:"מה תקין / חסר"},
+    'dashboard':      {ic:"📊",lb:"דשבורד ניהולי", ds:"מבט על"},
+    'admin':          {ic:"⚙️",lb:"מסך ניהול",     ds:"צוות · צ'קליסט · מלאי"},
+  }
+};
+// אילו פעולות לכל תפקיד
+const ROLE_ACTIONS = {
+  manager:{do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
+           view:['feed','review','inventory-status','dashboard','admin']},
+  coach:  {do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
+           view:['feed','inventory-status']},
+  sales:  {do:['sales-summary'],
+           view:['feed','review','inventory-status']},
+  helper: {do:['helper-checklist'],
+           view:['inventory-status']},
+};
+
+/* ============================================================
+   מצב זמן ריצה
+   ============================================================ */
+let STAFF = {};          // נטען מהענן
+let ME = null;           // המשתמש/ת המחובר/ת
+let pinBuffer = "";
+let pendingStaffId = null;
+
+/* ---------- טעינת צוות מהענן ---------- */
+async function loadStaff(){
+  try{
+    const r = await fetch(`${CLOUD.base}/${CLOUD.node}/staff.json`);
+    const data = await r.json();
+    STAFF = (data && Object.keys(data).length) ? data : FALLBACK_STAFF;
+  }catch(e){
+    STAFF = FALLBACK_STAFF;
+  }
+}
+
+/* ---------- מסך בחירת שם ---------- */
+function renderStaffPick(){
+  const grid = document.getElementById('staff-grid');
+  const list = Object.entries(STAFF)
+    .filter(([id,s])=>s.active)
+    .sort((a,b)=>(a[1].order||99)-(b[1].order||99));
+  grid.innerHTML = list.map(([id,s])=>{
+    const rc = (ROLES[s.role]||{}).color || "#888";
+    const he = (ROLES[s.role]||{}).he || s.role;
+    const initial = (s.name||"?").trim()[0];
+    return `<button class="staff-btn" onclick="pickStaff('${id}')">
+        <span class="av" style="background:${rc}">${initial}</span>
+        <span>${s.name}</span>
+        <span class="rl">${he}</span>
+      </button>`;
+  }).join('');
+}
+
+/* ---------- לוח PIN ---------- */
+function buildPad(){
+  const pad = document.getElementById('pad');
+  const keys = [1,2,3,4,5,6,7,8,9,'ghost',0,'del'];
+  pad.innerHTML = keys.map(k=>{
+    if(k==='ghost') return `<button class="ghost" disabled></button>`;
+    if(k==='del')   return `<button onclick="pinDel()">⌫</button>`;
+    return `<button onclick="pinPress(${k})">${k}</button>`;
+  }).join('');
+}
+function pickStaff(id){
+  pendingStaffId = id; pinBuffer="";
+  document.getElementById('pin-name').textContent = STAFF[id].name;
+  updateDots();
+  document.getElementById('who-pick').classList.add('hidden');
+  document.getElementById('pin-wrap').classList.remove('hidden');
+}
+function backToPick(){
+  document.getElementById('pin-wrap').classList.add('hidden');
+  document.getElementById('who-pick').classList.remove('hidden');
+  pinBuffer=""; pendingStaffId=null;
+}
+function pinPress(n){
+  if(pinBuffer.length>=4) return;
+  pinBuffer += n; updateDots();
+  if(pinBuffer.length===4) setTimeout(checkPin,120);
+}
+function pinDel(){ pinBuffer=pinBuffer.slice(0,-1); updateDots(); }
+function updateDots(){
+  const dots = document.getElementById('pin-dots');
+  dots.classList.remove('err');
+  [...dots.children].forEach((d,i)=>d.classList.toggle('on', i<pinBuffer.length));
+}
+function checkPin(){
+  const s = STAFF[pendingStaffId];
+  if(s && pinBuffer === String(s.pin)){
+    const stay = document.getElementById('stay').checked;
+    if(stay) localStorage.setItem('bux_ops_me', pendingStaffId);
+    loginAs(pendingStaffId);
+  }else{
+    document.getElementById('pin-dots').classList.add('err');
+    pinBuffer=""; setTimeout(updateDots,400);
+  }
+}
+
+/* ---------- כניסה + בית ---------- */
+function loginAs(id){
+  ME = {id, ...STAFF[id]};
+  document.getElementById('screen-login').classList.add('hidden');
+  document.getElementById('screen-app').classList.remove('hidden');
+  const rc=(ROLES[ME.role]||{}).color||"#888";
+  document.getElementById('t-av').textContent=(ME.name||"?").trim()[0];
+  document.getElementById('t-av').style.background=rc;
+  document.getElementById('t-name').textContent=ME.name;
+  document.getElementById('t-role').textContent=(ROLES[ME.role]||{}).he||ME.role;
+  renderHome();
+  window.scrollTo(0,0);
+}
+function logout(){
+  localStorage.removeItem('bux_ops_me');
+  ME=null;
+  document.getElementById('screen-app').classList.add('hidden');
+  document.getElementById('screen-login').classList.remove('hidden');
+  backToPick();
+}
+
+function shiftNow(){
+  const h=new Date().getHours();
+  if(h>=5 && h<11) return {k:"morning",ic:"🌅",t:"משמרת בוקר",s:"הכל מוכן 55 דק' לפני — עד 05:55"};
+  if(h>=15 && h<22) return {k:"evening",ic:"🌙",t:"משמרת ערב",s:"הכל מוכן 55 דק' לפני — עד 16:55"};
+  return {k:"off",ic:"☕",t:"מחוץ לשעות המשמרת",s:"בוקר 06:00–10:00 · ערב 16:00–21:00"};
+}
+function greet(){
+  const h=new Date().getHours();
+  if(h<12) return "בוקר טוב"; if(h<17) return "צהריים טובים"; if(h<21) return "ערב טוב"; return "לילה טוב";
+}
+
+function renderHome(){
+  const conf = ROLE_ACTIONS[ME.role] || {do:[],view:[]};
+  const sh = shiftNow();
+  const card = (key, kind, wide=false)=>{
+    const a = ACTIONS[kind][key]; if(!a) return "";
+    const cls = ["action", wide?"wide":"", a.primary?"primary":""].join(" ");
+    return `<button class="${cls}" onclick="openStub('${a.lb}')">
+        <span class="badge-soon">בקרוב</span>
+        <span class="ic">${a.ic}</span>
+        <span><span class="lb">${a.lb}</span>${a.ds?`<br><span class="ds">${a.ds}</span>`:""}</span>
+      </button>`;
+  };
+  let html = `
+    <div class="shift-banner ${sh.k}">
+      <span class="big">${sh.ic}</span>
+      <span><b>${greet()}, ${ME.name.split(' ')[0]}</b> · ${sh.t}<br>
+      <span style="font-weight:500;opacity:.85">${sh.s}</span></span>
+    </div>`;
+
+  if(conf.do.length){
+    html += `<div class="sec-title">מה ממלאים היום ✍️</div><div class="actions">`;
+    html += conf.do.map(k=>card(k,'do')).join('');
+    html += `</div>`;
+  }
+  if(conf.view.length){
+    html += `<div class="sec-title">צפייה ומעקב 👀</div><div class="actions">`;
+    // מסך ניהול תמיד רחב ובולט
+    html += conf.view.map(k=>card(k,'view', k==='admin')).join('');
+    html += `</div>`;
+  }
+  document.getElementById('home').innerHTML = html;
+}
+
+/* ---------- מודל "בקרוב" (עד שנבנה את הטפסים) ---------- */
+function openStub(name){
+  const bg=document.createElement('div');
+  bg.className='modal-bg';
+  bg.innerHTML=`<div class="sheet" onclick="event.stopPropagation()">
+    <div class="grip"></div>
+    <h3>${name} 🚧</h3>
+    <p>זה הבסיס — המסך הזה ייבנה בשלב הבא, אחרי שגל יאשר את הסקיצה.
+       כרגע רואים את המבנה, ההתחברות וההרשאות לפי תפקיד.</p>
+    <button class="ok" onclick="this.closest('.modal-bg').remove()">הבנתי 🧡</button>
+  </div>`;
+  bg.onclick=()=>bg.remove();
+  document.body.appendChild(bg);
+}
+
+/* ---------- אתחול ---------- */
+(async function init(){
+  buildPad();
+  await loadStaff();
+  const saved = localStorage.getItem('bux_ops_me');
+  if(saved && STAFF[saved] && STAFF[saved].active){
+    loginAs(saved);
+  }else{
+    renderStaffPick();
+  }
+})();
+</script>
+</body>
+</html>
