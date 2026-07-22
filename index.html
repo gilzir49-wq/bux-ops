@@ -303,6 +303,30 @@ textarea{min-height:80px;resize:vertical;line-height:1.5}
 .foot{text-align:center;color:#5a5a5a;font-size:12px;padding:24px 0 30px}
 .foot .heart{color:var(--orange)}
 .loading{text-align:center;color:var(--muted);padding:50px;font-size:15px}
+/* ===== משרד ===== */
+.wk-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.wk-nav .arw{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:10px 14px;font-size:16px;font-weight:800;cursor:pointer}
+.wk-nav .lbl{flex:1;text-align:center;font-weight:800;font-size:14px}
+.wk-nav .today{background:var(--card);border:1px solid var(--orange-dim);color:var(--orange);border-radius:11px;padding:10px 12px;font-size:13.5px;font-weight:800;cursor:pointer}
+.day-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px}
+.day-strip button{position:relative;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:9px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.day-strip button.sel{background:var(--orange);border-color:var(--orange);color:#1c1c1c}
+.day-strip button.tdy{border-color:var(--orange)}
+.day-strip .dn{font-size:13px;font-weight:800}
+.day-strip .dd{font-size:10.5px;opacity:.8}
+.day-strip .cnt{position:absolute;top:-5px;left:-3px;background:var(--red);color:#fff;font-size:10px;font-weight:800;min-width:16px;height:16px;border-radius:16px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+.slot{background:var(--card);border:1px solid var(--line);border-right:4px solid var(--orange);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.slot.conflict{border-color:rgba(242,109,109,.5);background:rgba(242,109,109,.07)}
+.slot .st{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.slot .tm{font-weight:800;font-variant-numeric:tabular-nums;font-size:14.5px}
+.slot .who{font-weight:800}
+.slot .tg{font-size:11px;font-weight:800;padding:3px 8px;border-radius:20px;background:var(--card2);color:var(--muted)}
+.slot .warn{font-size:11.5px;font-weight:800;color:var(--red)}
+.slot .nt{font-size:13px;color:var(--muted);margin-top:5px}
+.slot .acts{display:flex;gap:8px;margin-top:8px}
+.slot .acts button{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer}
+.freeday{text-align:center;color:var(--green);padding:26px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-weight:700}
+.pill{display:inline-block;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:20px;color:#fff}
 </style>
 </head>
 <body>
@@ -394,17 +418,18 @@ const ACTIONS = {
     'payroll':{ic:"💰",lb:"שעון ושכר",ds:"שעות × תעריף"},
     'maint-summary':{ic:"📆",lb:"סיכום תחזוקה",ds:"יומי · שבועי · חודשי"},
     'evals':{ic:"⭐",lb:"הערכות מאמנים",ds:"היסטוריה + ציונים"},
+    'office':{ic:"🏢",lb:"משרד",ds:"לוח תפוסה + רישום"},
     'dashboard':{ic:"📊",lb:"דשבורד ניהולי",ds:"מבט על"},
     'admin':{ic:"⚙️",lb:"מסך ניהול",ds:"צוות · צ'קליסט · מלאי"},
   }
 };
 const ROLE_ACTIONS = {
   manager:{do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
-           view:['feed','review','inventory-status','stocktake','order-list','maint-summary','evals','dashboard','payroll','admin']},
+           view:['feed','review','inventory-status','stocktake','order-list','maint-summary','evals','office','dashboard','payroll','admin']},
   coach:  {do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
-           view:['feed','inventory-status']},
-  sales:  {do:['sales-summary'], view:['feed','review','inventory-status']},
-  helper: {do:['helper-checklist'], view:['inventory-status','stocktake','maint-summary','payroll']},
+           view:['feed','inventory-status','office']},
+  sales:  {do:['sales-summary'], view:['feed','review','inventory-status','office']},
+  helper: {do:['helper-checklist'], view:['inventory-status','stocktake','maint-summary','payroll','office']},
 };
 const ROUTE = {
   'checklist-open':()=>viewChecklist('open'),
@@ -413,7 +438,7 @@ const ROUTE = {
   'sales-summary':viewSalesSummary, 'helper-checklist':viewHelper,
   'inventory':viewInventoryReport, 'feed':viewFeed, 'review':viewReview,
   'inventory-status':viewInventoryStatus, 'stocktake':viewStocktake, 'order-list':viewOrderList,
-  'payroll':viewPayroll, 'maint-summary':viewMaintSummary, 'evals':viewEvals, 'dashboard':viewDashboard, 'admin':viewAdmin,
+  'payroll':viewPayroll, 'maint-summary':viewMaintSummary, 'evals':viewEvals, 'office':viewOffice, 'dashboard':viewDashboard, 'admin':viewAdmin,
 };
 const FREQ_LBL={daily:'יומי ☀️',weekly:'שבועי 📆',monthly:'חודשי 🗓️'};
 
@@ -500,7 +525,7 @@ function logout(){ localStorage.removeItem('bux_ops_me');ME=null;
    ============================================================ */
 const V=()=>document.getElementById('view');
 function go(action){ (ROUTE[action]||viewHome)(); window.scrollTo(0,0); }
-function vhead(title,sub,refresh){ return `<div class="vhead"><button class="back" onclick="viewHome()">→</button>
+function vhead(title,sub,refresh,back){ return `<div class="vhead"><button class="back" onclick="${back||'viewHome()'}">→</button>
   <div><h2>${title}</h2>${sub?`<div class="sub">${sub}</div>`:''}</div>
   ${refresh?`<div class="spc"></div><button class="refresh" onclick="${refresh}" title="רענון">⟳</button>`:''}</div>`; }
 function loading(){ V().innerHTML=`<div class="loading">טוען… 🧡</div>`; }
@@ -1380,6 +1405,176 @@ async function addInv(){
   const obj={name:'פריט חדש',unit:'',qty:0,min:1,active:true,order}; await cPut('inventory_items/'+id,obj); INV[id]=obj; admInv();
 }
 async function delInv(id){ if(!confirm('למחוק את הפריט?'))return; await cDel('inventory_items/'+id); delete INV[id]; admInv(); }
+
+/* ============================================================
+   🏢 משרד — לוח תפוסה + רישום פעילות (מחובר לענף bux-services)
+   ============================================================ */
+const OFFICE_BASE=`${CLOUD.base}/bux-services`;
+async function oGet(p){ try{const r=await fetch(`${OFFICE_BASE}/${p}.json`);if(!r.ok)throw 0;return await r.json();}catch(e){return null;} }
+async function oWrite(m,p,o){ const r=await fetch(`${OFFICE_BASE}/${p}.json`,{method:m,body:o?JSON.stringify(o):undefined});
+  if(!r.ok)throw new Error('net'); return m==='DELETE'?true:await r.json(); }
+const oPush=(p,o)=>oWrite('POST',p,o), oPut=(p,o)=>oWrite('PUT',p,o), oDel=(p)=>oWrite('DELETE',p);
+
+const SERVICE_TYPES=["ישיבת צוות","צילומי תוכן","ייעוצי תזונה","טיפולי ספורטרפיה","עבודה משרדית"];
+const TYPE_COLORS={"ישיבת צוות":"#1E4D2B","צילומי תוכן":"#c0392b","ייעוצי תזונה":"#b58900","טיפולי ספורטרפיה":"#2980b9","עבודה משרדית":"#8e44ad"};
+const NO_CLIENT_TYPES=["ישיבת צוות","צילומי תוכן","עבודה משרדית"];
+const HE_DAYS_S=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+
+let PROVIDERS={}, O_SESSIONS={}, O_BOOKINGS={}, MY_PROV=null, CAL_WEEK=null, CAL_SEL=null;
+
+function oStartOfWeek(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-x.getDay());return x;}
+function oAddDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function dISO(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function t2m(t){const[h,m]=String(t||'0:0').split(':').map(Number);return (h||0)*60+(m||0);}
+function m2t(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
+function ensureMyProv(){ MY_PROV=null; const me=(ME.name||'').trim();
+  for(const [id,p] of Object.entries(PROVIDERS)){ const pn=(p.name||'').trim();
+    if(pn&&(me.includes(pn)||pn.includes(me))){ MY_PROV=id; break; } }
+  if(!MY_PROV) MY_PROV=Object.keys(PROVIDERS)[0]||null;
+}
+
+/* ---------- מרכז המשרד ---------- */
+function viewOffice(){
+  let h=vhead("משרד 🏢","לוח תפוסה + רישום פעילות");
+  h+=`<div class="actions">
+    <button class="action wide primary" onclick="viewOfficeBoard()"><span class="ic">🗓️</span>
+      <span><span class="lb">תפוסת / הזמנת משרד</span><br><span class="ds">מי תפס מתי · חפיפות · חוזר שבועי</span></span></button>
+    <button class="action wide" onclick="viewOfficeLog()"><span class="ic">📝</span>
+      <span><span class="lb">רישום פעילות</span><br><span class="ds">מה עשיתי — למעקב ודוח</span></span></button>
+  </div>`;
+  V().innerHTML=h;
+}
+
+/* ---------- לוח המשרד ---------- */
+async function viewOfficeBoard(){
+  loading();
+  const [pv,se,bk]=await Promise.all([oGet('providers'),oGet('sessions'),oGet('bookings')]);
+  PROVIDERS=pv||{}; O_SESSIONS=se||{}; O_BOOKINGS=bk||{}; ensureMyProv();
+  if(!CAL_WEEK){ CAL_WEEK=oStartOfWeek(new Date()); CAL_SEL=dISO(new Date()); }
+  renderBoard();
+}
+function slotsForDate(iso){
+  const wd=new Date(iso+"T00:00").getDay(), out=[];
+  Object.entries(O_BOOKINGS).forEach(([k,b])=>{ if((b.kind==="weekly"&&b.weekday===wd)||(b.kind!=="weekly"&&b.date===iso)) out.push(Object.assign({_k:k,_src:"booking"},b)); });
+  Object.entries(O_SESSIONS).forEach(([k,s])=>{ if(s.date===iso&&s.start_time){
+    out.push({_k:k,_src:"session",provider_id:s.provider_id,kind:"once",start:s.start_time,
+      end:m2t(t2m(s.start_time)+Number(s.duration_minutes||0)),
+      note:(s.service_type||"")+(s.client_name?" · "+s.client_name:"")}); } });
+  return out.sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+}
+function markConflicts(list){ list.forEach(x=>x._conflict=false);
+  for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){
+    if(t2m(list[i].start)<t2m(list[j].end)&&t2m(list[j].start)<t2m(list[i].end)){ list[i]._conflict=true; list[j]._conflict=true; } }
+  return list;
+}
+function weekShift(n){ CAL_WEEK=oAddDays(CAL_WEEK,7*n); CAL_SEL=dISO(CAL_WEEK); renderBoard(); }
+function weekToday(){ CAL_WEEK=oStartOfWeek(new Date()); CAL_SEL=dISO(new Date()); renderBoard(); }
+function selectDay(iso){ CAL_SEL=iso; renderBoard(); }
+function renderBoard(){
+  const wEnd=oAddDays(CAL_WEEK,6), todayIso=dISO(new Date());
+  let h=vhead("לוח המשרד 🗓️","מרחב אחד משותף — תפיסה חוסמת לכולם","viewOfficeBoard()","viewOffice()");
+  h+=`<div class="wk-nav"><button class="arw" onclick="weekShift(1)">›</button>
+    <span class="lbl">${fmtDate(dISO(CAL_WEEK))} – ${fmtDate(dISO(wEnd))}</span>
+    <button class="arw" onclick="weekShift(-1)">‹</button>
+    <button class="today" onclick="weekToday()">היום</button></div>`;
+  let strip='';
+  for(let i=0;i<7;i++){ const d=oAddDays(CAL_WEEK,i), iso=dISO(d), cnt=slotsForDate(iso).length;
+    strip+=`<button class="${iso===CAL_SEL?'sel':''} ${iso===todayIso?'tdy':''}" onclick="selectDay('${iso}')">
+      ${cnt?`<span class="cnt">${cnt}</span>`:''}<span class="dn">${HE_DAYS_S[i]}</span><span class="dd">${d.getDate()}/${d.getMonth()+1}</span></button>`; }
+  h+=`<div class="day-strip">${strip}</div>`;
+  const list=markConflicts(slotsForDate(CAL_SEL));
+  if(!list.length){ h+=`<div class="freeday">אין תפיסות ביום זה — המשרד פנוי ✅</div>`; }
+  else h+=list.map(b=>{ const p=PROVIDERS[b.provider_id]||{name:"(לא ידוע)",color:"#888"}; const col=p.color||"#888";
+    const isSession=b._src==="session";
+    const tag=isSession?`<span class="tg" style="background:rgba(63,185,80,.15);color:var(--green)">📝 מפגש</span>`
+      :(b.kind==="weekly"?`<span class="tg">↻ כל שבוע</span>`:`<span class="tg" style="background:rgba(241,201,59,.15);color:var(--yellow)">🗓️ תפיסה</span>`);
+    const acts=isSession?`<button onclick="delOfficeSession('${b._k}')">🗑 מחיקה</button>`
+      :`<button onclick="openBookingSheet('${b._k}')">✏️ עריכה</button><button onclick="delBooking('${b._k}')">🗑 מחיקה</button>`;
+    return `<div class="slot ${b._conflict?'conflict':''}" style="border-right-color:${col}">
+      <div class="st"><span class="tm">${b.start}–${b.end}</span><span class="who" style="color:${col}">${esc(p.name)}</span>
+        ${tag}${b._conflict?`<span class="warn">⚠️ חפיפה</span>`:''}</div>
+      ${b.note?`<div class="nt">${esc(b.note)}</div>`:''}
+      <div class="acts">${acts}</div></div>`; }).join('');
+  h+=`<button class="submit" style="margin-top:16px" onclick="openBookingSheet()">＋ תפיסת משרד חדשה</button>`;
+  V().innerHTML=h; window.scrollTo(0,0);
+}
+function openBookingSheet(key){
+  const edit=(typeof key==='string')?key:null, b=edit?O_BOOKINGS[edit]:null;
+  const sel=b?b.provider_id:MY_PROV;
+  const provOpts=Object.entries(PROVIDERS).filter(([id,p])=>p.active!==false)
+    .map(([id,p])=>`<option value="${id}"${sel===id?' selected':''}>${esc(p.name)}${p.role?' — '+esc(p.role):''}</option>`).join('');
+  const bg=document.createElement('div'); bg.className='modal-bg';
+  bg.innerHTML=`<div class="sheet" onclick="event.stopPropagation()"><div class="grip"></div>
+    <h3 style="text-align:center">${edit?'עריכת תפיסה':'תפיסת משרד חדשה 🗓️'}</h3>
+    <div class="field"><label>מי תופס/ת</label><select id="bk_prov">${provOpts}</select></div>
+    <div class="field"><label>תאריך</label><input type="date" id="bk_date" value="${b?(b.kind==='weekly'?nextDateForWeekday(b.weekday):b.date):CAL_SEL}"></div>
+    <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>משעה</label><input type="time" id="bk_start" value="${b?b.start:''}"></div>
+      <div class="field" style="flex:1"><label>עד שעה</label><input type="time" id="bk_end" value="${b?b.end:''}"></div></div>
+    <div class="field"><label>הערה</label><input type="text" id="bk_note" value="${b?esc(b.note||''):''}" placeholder="למשל: ייעוץ תזונה עם דנה"></div>
+    <label class="stay" style="justify-content:flex-start;margin:0 0 14px"><input type="checkbox" id="bk_repeat" ${b&&b.kind==='weekly'?'checked':''}> חוזר כל שבוע</label>
+    <button class="submit" onclick="saveBooking('${edit||''}',this)">שמירה ✓</button>
+    ${edit?`<button class="mark-done" style="background:rgba(242,109,109,.14);color:var(--red)" onclick="delBooking('${edit}')">🗑 מחיקת התפיסה</button>`:''}</div>`;
+  bg.onclick=()=>bg.remove(); document.body.appendChild(bg);
+}
+function nextDateForWeekday(wd){ for(let i=0;i<7;i++){ const d=oAddDays(CAL_WEEK,i); if(d.getDay()===wd)return dISO(d); } return CAL_SEL; }
+async function saveBooking(edit,btn){
+  edit=edit||null;
+  const date=document.getElementById('bk_date').value, start=document.getElementById('bk_start').value, end=document.getElementById('bk_end').value;
+  const note=document.getElementById('bk_note').value.trim(), repeat=document.getElementById('bk_repeat').checked, provider_id=document.getElementById('bk_prov').value;
+  if(!date)return toast('בחר/י תאריך'); if(!start||!end)return toast('בחר/י שעת התחלה וסיום');
+  if(t2m(end)<=t2m(start))return toast('שעת הסיום חייבת להיות אחרי ההתחלה');
+  const wd=new Date(date+'T00:00').getDay();
+  const obj=repeat?{provider_id,kind:'weekly',weekday:wd,start,end,note,created_at:new Date().toISOString()}
+    :{provider_id,kind:'once',date,start,end,note,created_at:new Date().toISOString()};
+  const ok=await withBusy(btn,()=> edit?oPut('bookings/'+edit,obj):oPush('bookings',obj));
+  if(ok){ if(!repeat){ CAL_SEL=date; CAL_WEEK=oStartOfWeek(new Date(date+'T00:00')); }
+    document.querySelectorAll('.modal-bg').forEach(m=>m.remove()); await viewOfficeBoard(); toast('נשמר ✓'); }
+}
+async function delBooking(key){ if(!confirm('למחוק את התפיסה?'))return;
+  try{ await oDel('bookings/'+key); document.querySelectorAll('.modal-bg').forEach(m=>m.remove()); await viewOfficeBoard(); toast('נמחק'); }catch(e){ toast('❌ אין חיבור'); } }
+async function delOfficeSession(key){ if(!confirm('למחוק את המפגש?'))return;
+  try{ await oDel('sessions/'+key); await viewOfficeBoard(); toast('נמחק'); }catch(e){ toast('❌ אין חיבור'); } }
+
+/* ---------- רישום פעילות ---------- */
+async function viewOfficeLog(){
+  loading();
+  const [pv,se]=await Promise.all([oGet('providers'),oGet('sessions')]);
+  PROVIDERS=pv||{}; O_SESSIONS=se||{}; ensureMyProv();
+  const defType=(SERVICE_TYPES.includes((PROVIDERS[MY_PROV]||{}).role))?(PROVIDERS[MY_PROV]||{}).role:SERVICE_TYPES[0];
+  const provOpts=Object.entries(PROVIDERS).filter(([id,p])=>p.active!==false).map(([id,p])=>`<option value="${id}"${MY_PROV===id?' selected':''}>${esc(p.name)}</option>`).join('');
+  let h=vhead("רישום פעילות 📝","מה עשית — נכנס גם ללוח וגם לדוח","viewOfficeLog()","viewOffice()");
+  h+=`<div class="field"><label>מי</label><select id="os_prov">${provOpts}</select></div>`;
+  h+=`<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>תאריך</label><input type="date" id="os_date" value="${todayISO()}"></div>
+    <div class="field" style="flex:1"><label>שעה</label><input type="time" id="os_start" value="${nowTime()}"></div></div>`;
+  h+=`<div class="field"><label>משך (דקות)</label><input type="number" id="os_dur" min="0" inputmode="numeric" placeholder="למשל 60"></div>`;
+  h+=`<div class="field"><label>סוג פעילות</label><select id="os_type" onchange="toggleClientField()">${SERVICE_TYPES.map(t=>`<option${t===defType?' selected':''}>${t}</option>`).join('')}</select></div>`;
+  h+=`<div class="field" id="os_client_field"><label>עם מי (שם המתאמן/ת)</label><input type="text" id="os_client" placeholder="שם"></div>`;
+  h+=`<div class="field"><label>הערה</label><textarea id="os_note" placeholder="פרטים…"></textarea></div>`;
+  h+=`<button class="submit" onclick="saveOfficeSession(this)">שליחת רישום ✅</button>`;
+  h+=`<div class="sec-title">רישומים אחרונים</div>`;
+  const list=Object.entries(O_SESSIONS).map(([k,s])=>({k,...s})).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  if(!list.length) h+=`<div class="empty"><span class="e">📝</span>עוד אין רישומים</div>`;
+  else h+=`<div class="card-list">`+list.slice(0,40).map(s=>{ const col=TYPE_COLORS[s.service_type]||'#888'; const p=PROVIDERS[s.provider_id]||{name:''};
+    return `<div class="rec"><div class="rtop"><span class="pill" style="background:${col}">${esc(s.service_type)}</span>
+      <span class="who">${esc(p.name)}</span><span class="spacer"></span><span class="meta">${fmtDate(s.date)} ${esc(s.start_time||'')}</span></div>
+      <div class="row">${s.duration_minutes?`${s.duration_minutes} דק'`:''}${s.client_name?` · עם ${esc(s.client_name)}`:''}${s.note?` · ${esc(s.note)}`:''}</div>
+      <div class="acts" style="margin-top:6px"><button onclick="delOfficeSessionLog('${s.k}')" style="background:var(--card2);border:1px solid var(--line);color:var(--red);border-radius:9px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer">🗑 מחיקה</button></div></div>`; }).join('')+`</div>`;
+  V().innerHTML=h; toggleClientField(); window.scrollTo(0,0);
+}
+function toggleClientField(){ const t=document.getElementById('os_type'); if(!t)return;
+  document.getElementById('os_client_field').style.display=NO_CLIENT_TYPES.includes(t.value)?'none':'block'; }
+async function saveOfficeSession(btn){
+  const type=document.getElementById('os_type').value, noClient=NO_CLIENT_TYPES.includes(type);
+  const date=document.getElementById('os_date').value; if(!date)return toast('בחר/י תאריך');
+  const obj={provider_id:document.getElementById('os_prov').value,date,start_time:document.getElementById('os_start').value,
+    duration_minutes:+document.getElementById('os_dur').value||0,service_type:type,
+    client_name:noClient?'':document.getElementById('os_client').value.trim(),
+    note:document.getElementById('os_note').value.trim(),created_at:new Date().toISOString()};
+  const ok=await withBusy(btn,()=>oPush('sessions',obj));
+  if(ok){ toast('נרשם ✓'); viewOfficeLog(); }
+}
+async function delOfficeSessionLog(key){ if(!confirm('למחוק את הרישום?'))return;
+  try{ await oDel('sessions/'+key); viewOfficeLog(); toast('נמחק'); }catch(e){ toast('❌ אין חיבור'); } }
 
 /* ============================================================
    עמידות: אופליין, טיפול בכשלים, service worker
