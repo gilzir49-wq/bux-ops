@@ -1077,7 +1077,9 @@ function evalCard(e){
   h+=`<div class="row"><b>מסקנה:</b> ${pass?'רשאי/ת להעביר לבד ✅':'עדיין בחפיפה ⛔'}</div>`;
   if(e.ctx) h+=`<div class="row"><b>הקשר:</b> ${esc(e.ctx)}</div>`;
   if(e.wod) h+=`<div class="row"><b>אימון:</b> ${esc(e.wod)}</div>`;
-  if(e.scores){ const rb=RUBRIC.map(r=>`${esc(r.t)}: ${e.scores[r.k]||'-'}`).join(' · '); h+=`<div class="row"><b>ציונים:</b> ${rb}</div>`; }
+  const rl=rubricLines(e);
+  if(rl.length){ h+=`<div class="handoff" style="background:rgba(253,171,61,.06)"><b>📋 פירוט הקריטריונים</b>`+
+    rl.map((x,i)=>`<div style="margin-top:3px">${i+1}. ${esc(x)}</div>`).join('')+`</div>`; }
   if(e.hier) h+=`<div class="row"><b>היררכיה:</b> ${esc(e.hier)}</div>`;
   if(e.strong) h+=`<div class="row"><b>חוזקות:</b> ${esc(e.strong)}</div>`;
   if(e.improve) h+=`<div class="row"><b>לשיפור:</b> ${esc(e.improve)}</div>`;
@@ -1088,14 +1090,27 @@ function evalCard(e){
   h+=`<button class="share-btn" onclick="shareEval('${e.id}')">📲 שיתוף בוואטסאפ</button></div>`;
   return h;
 }
+function rubricLines(e){
+  if(!e.scores) return [];
+  return RUBRIC.map(r=>{ const n=e.scores[r.k]; if(!n) return null;
+    return `${r.t} (${r.w}%): ${n}/4 — ${r.l[n-1]||''}`; }).filter(Boolean);
+}
 function evalText(e){
-  const L=[`⭐ *הערכת מאמן · קרוספיט באקס*`, `${e.ratee||''} · מעריך/ה: ${e.rater||''} · ${fmtDate(e.date)}`,
-    `ציון משוקלל: ${(e.weighted||0).toFixed(2)}/4 — ${e.soloOk?'רשאי/ת להעביר לבד ✅':'עדיין בחפיפה ⛔'}`];
-  if(e.safety==='כן') L.push(`⚠️ דגל בטיחות`);
+  const L=[`⭐ *הערכת מאמן · קרוספיט באקס*`, `${e.ratee||''} · מעריך/ה: ${e.rater||''} · ${fmtDate(e.date)}`];
+  if(e.ctx) L.push(`הקשר: ${e.ctx}`);
+  if(e.wod) L.push(`אימון ותנועות: ${e.wod}`);
+  L.push(`\n📊 *ציון משוקלל: ${(e.weighted||0).toFixed(2)}/4*`);
+  L.push(e.soloOk?'✅ רשאי/ת להעביר לבד':'⛔ עדיין בחפיפה');
+  if(e.safety==='כן') L.push('⚠️ דגל בטיחות — סיכון שלא טופל');
+  if(e.hier) L.push(`היררכיה (מכניקה→עקביות→אינטנסיביות): ${e.hier}`);
+  const rl=rubricLines(e);
+  if(rl.length){ L.push(`\n📋 *פירוט הקריטריונים:*`); rl.forEach((x,i)=>L.push(`${i+1}. ${x}`)); }
   if(e.strong) L.push(`\n💪 חוזקות: ${e.strong}`);
-  if(e.improve) L.push(`📈 לשיפור: ${e.improve}`);
-  if(e.goal) L.push(`🎯 יעד: ${e.goal}`);
+  if(e.improve) L.push(`📈 נקודות לשיפור: ${e.improve}`);
+  if(e.talk) L.push(`💬 סיכום שיחה: ${e.talk}`);
+  if(e.goal) L.push(`🎯 יעד להמשך: ${e.goal}`);
   if(e.rec) L.push(`📌 המלצה: ${e.rec}`);
+  if(e.followup) L.push(`📅 תאריך מעקב: ${fmtDate(e.followup)}`);
   return L.join('\n');
 }
 function shareEval(id){ const e=(window._EVALS||[]).find(x=>x.id===id); if(!e) return;
