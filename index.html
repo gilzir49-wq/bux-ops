@@ -479,9 +479,9 @@ function renderStaffPick(){
   const grid=document.getElementById('staff-grid');
   const list=Object.entries(STAFF).filter(([id,s])=>s.active).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
   grid.innerHTML=list.map(([id,s])=>{
-    const rc=(ROLES[s.role]||{}).color||"#888", he=(ROLES[s.role]||{}).he||s.role, ini=(s.name||"?").trim()[0];
+    const rc=(ROLES[s.role]||{}).color||"#888", he=s.title||(ROLES[s.role]||{}).he||s.role, ini=(s.name||"?").trim()[0];
     return `<button class="staff-btn" onclick="pickStaff('${id}')">
-      <span class="av" style="background:${rc}">${ini}</span><span>${esc(s.name)}</span><span class="rl">${he}</span></button>`;
+      <span class="av" style="background:${rc}">${ini}</span><span>${esc(s.name)}</span><span class="rl">${esc(he)}</span></button>`;
   }).join('');
 }
 function buildPad(){
@@ -513,7 +513,7 @@ function loginAs(id){
   document.getElementById('t-av').textContent=(ME.name||"?").trim()[0];
   document.getElementById('t-av').style.background=rc;
   document.getElementById('t-name').textContent=ME.name;
-  document.getElementById('t-role').textContent=(ROLES[ME.role]||{}).he||ME.role;
+  document.getElementById('t-role').textContent=ME.title||(ROLES[ME.role]||{}).he||ME.role;
   ACTIVE_SHIFT=null;
   viewHome(); window.scrollTo(0,0);
   // טעינת מצב שעון עבודה (לעובדים שעתיים) ורענון הווידג'ט
@@ -1339,7 +1339,7 @@ function admStaff(){
     <div class="r1"><select class="f-role" style="flex:1">${roleOpts.replace(`value="${s.role}"`,`value="${s.role}" selected`)}</select>
       <label class="qm">₪/ש<input type="number" class="f-rate" value="${+s.rate||0}" inputmode="numeric"></label>
       <label class="toggle"><input type="checkbox" class="f-active" ${s.active?'checked':''}>פעיל</label></div>
-    <div class="r1"><span style="flex:1"></span>
+    <div class="r1"><input type="text" class="f-title" value="${esc(s.title||'')}" placeholder="כותרת תצוגה (רשות)" style="flex:1">
       <button class="save" onclick="saveStaff('${id}')">שמור</button>
       <button class="del" onclick="delStaff('${id}')">מחק</button></div></div>`).join('');
   h+=`<button class="add-btn" onclick="addStaff()">＋ הוספת איש צוות</button>`;
@@ -1349,12 +1349,13 @@ async function saveStaff(id){
   const row=document.querySelector(`.adm-row[data-id="${id}"]`);
   const obj={name:row.querySelector('.f-name').value.trim(),pin:row.querySelector('.f-pin').value.trim(),
     role:row.querySelector('.f-role').value,rate:+row.querySelector('.f-rate').value||0,
+    title:row.querySelector('.f-title').value.trim(),
     active:row.querySelector('.f-active').checked,order:STAFF[id].order||99};
   await cPut('staff/'+id,obj); STAFF[id]=obj; toast('נשמר ✓');
 }
 async function addStaff(){
   const id='s_'+Date.now(), order=Object.keys(STAFF).length+1;
-  const obj={name:'חדש',pin:'0000',role:'coach',rate:0,active:true,order}; await cPut('staff/'+id,obj); STAFF[id]=obj; admStaff();
+  const obj={name:'חדש',pin:'0000',role:'coach',rate:0,title:'',active:true,order}; await cPut('staff/'+id,obj); STAFF[id]=obj; admStaff();
 }
 async function delStaff(id){
   if(!confirm('למחוק את '+STAFF[id].name+'?'))return;
