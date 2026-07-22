@@ -382,6 +382,7 @@ const ACTIONS = {
     'feed':{ic:"🗂️",lb:"פיד סיכומים",ds:"מה קרה במשמרות"},
     'review':{ic:"🔎",lb:"תור בקרה",ds:"לעדכן בארבוקס"},
     'inventory-status':{ic:"🚦",lb:"מצב מלאי",ds:"כמות מול מינימום"},
+    'stocktake':{ic:"🔢",lb:"ספירת מלאי",ds:"כמה יש עכשיו"},
     'order-list':{ic:"🛒",lb:"מה להזמין",ds:"הגיע למינימום"},
     'payroll':{ic:"💰",lb:"שעון ושכר",ds:"שעות × תעריף"},
     'maint-summary':{ic:"📆",lb:"סיכום תחזוקה",ds:"יומי · שבועי · חודשי"},
@@ -391,11 +392,11 @@ const ACTIONS = {
 };
 const ROLE_ACTIONS = {
   manager:{do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
-           view:['feed','review','inventory-status','order-list','maint-summary','dashboard','payroll','admin']},
+           view:['feed','review','inventory-status','stocktake','order-list','maint-summary','dashboard','payroll','admin']},
   coach:  {do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
            view:['feed','inventory-status']},
   sales:  {do:['sales-summary'], view:['feed','review','inventory-status']},
-  helper: {do:['helper-checklist'], view:['inventory-status','maint-summary','payroll']},
+  helper: {do:['helper-checklist'], view:['inventory-status','stocktake','maint-summary','payroll']},
 };
 const ROUTE = {
   'checklist-open':()=>viewChecklist('open'),
@@ -403,7 +404,7 @@ const ROUTE = {
   'shift-summary':viewShiftSummary, 'coach-eval':viewCoachEval,
   'sales-summary':viewSalesSummary, 'helper-checklist':viewHelper,
   'inventory':viewInventoryReport, 'feed':viewFeed, 'review':viewReview,
-  'inventory-status':viewInventoryStatus, 'order-list':viewOrderList,
+  'inventory-status':viewInventoryStatus, 'stocktake':viewStocktake, 'order-list':viewOrderList,
   'payroll':viewPayroll, 'maint-summary':viewMaintSummary, 'dashboard':viewDashboard, 'admin':viewAdmin,
 };
 const FREQ_LBL={daily:'יומי ☀️',weekly:'שבועי 📆',monthly:'חודשי 🗓️'};
@@ -798,7 +799,7 @@ function viewInventoryReport(){
   h+=`<div class="card-list">`+invItems().map(([id,it])=>{
     const qty=+it.qty||0, st=invStatus(qty,it.min);
     return `<div class="inv-take ${st}" data-id="${id}">
-      <div class="it-top"><span class="nm">${esc(it.name)}</span><span class="left st ${st==='order'?'out':st}">נשאר: ${qty}</span></div>
+      <div class="it-top"><span class="nm">${esc(it.name)}</span><span class="left st ${st==='order'?'out':st}">נשאר: ${qty}${uSuffix(it)}</span></div>
       <div class="stepper"><span class="stp-lbl">כמה לקחת?</span>
         <button type="button" class="stp" onclick="stepTake('${id}',-1)">−</button>
         <input type="number" class="take" id="take-${id}" value="0" min="0" max="${qty}" inputmode="numeric" readonly>
@@ -847,7 +848,7 @@ function viewHelper(){
   h+=`<div class="hint" style="margin:-4px 2px 10px">מילאת נייר/סבון? סמן/י כמה לקחת — יורד אוטומטית מהמלאי.</div>`;
   h+=`<div class="card-list">`+invItems().map(([id,it])=>{ const qty=+it.qty||0, st=invStatus(qty,it.min);
     return `<div class="inv-take ${st}" data-id="${id}">
-      <div class="it-top"><span class="nm">${esc(it.name)}</span><span class="left st ${st==='order'?'out':st}">נשאר: ${qty}</span></div>
+      <div class="it-top"><span class="nm">${esc(it.name)}</span><span class="left st ${st==='order'?'out':st}">נשאר: ${qty}${uSuffix(it)}</span></div>
       <div class="stepper"><span class="stp-lbl">כמה לקחת?</span>
         <button type="button" class="stp" onclick="stepTake('${id}',-1)">−</button>
         <input type="number" class="take" id="take-${id}" value="0" min="0" max="${qty}" inputmode="numeric" readonly>
@@ -1024,13 +1025,13 @@ async function viewInventoryStatus(){
   const iv=await cGet('inventory_items'); if(iv) INV=iv;
   const items=invItems();
   const rank={order:0,low:1,ok:2};
-  const rows=items.map(([id,it])=>({id,name:it.name,qty:+it.qty||0,min:+it.min||0,st:invStatus(it.qty,it.min)}))
+  const rows=items.map(([id,it])=>({id,name:it.name,unit:it.unit,qty:+it.qty||0,min:+it.min||0,st:invStatus(it.qty,it.min)}))
     .sort((a,b)=>rank[a.st]-rank[b.st]);
   const isMgr=ME.role==='manager';
   let h=vhead("מצב מלאי 🚦","כמות מול מינימום · חוסר צף למעלה","viewInventoryStatus()");
   h+=`<div class="card-list">`+rows.map(r=>{ const cls=r.st==='order'?'out':r.st;
     return `<div class="inv-row ${cls}"><span class="dot ${cls}"></span>
-      <span class="nm">${esc(r.name)}</span>
+      <span class="nm">${esc(r.name)}${r.unit?` <span style="color:var(--muted);font-weight:600;font-size:12px">(${esc(r.unit)})</span>`:''}</span>
       <span class="st ${cls}">${INV_LBL[r.st]} · ${r.qty}/${r.min}</span>
       ${isMgr?`<button class="restock" onclick="restock('${r.id}')">＋ קיבלתי</button>`:''}</div>`; }).join('')+`</div>`;
   V().innerHTML=h;
@@ -1063,6 +1064,37 @@ async function viewOrderList(){
 }
 function copyOrder(){ const txt=(document.getElementById('orderText')||{}).innerText||'';
   if(navigator.clipboard&&txt){ navigator.clipboard.writeText(txt).then(()=>toast('הועתק ✓')).catch(()=>toast('לא ניתן להעתיק')); } }
+function uSuffix(it){ return it&&it.unit?` ${esc(it.unit)}`:''; }
+
+/* ---------- ספירת מלאי (מילוי כמה יש עכשיו, ביחידות בודדות) ---------- */
+async function viewStocktake(){
+  loading();
+  const iv=await cGet('inventory_items'); if(iv) INV=iv;
+  let h=vhead("ספירת מלאי 🔢","מלא/י כמה יש עכשיו — ביחידות בודדות","viewStocktake()");
+  h+=`<div class="hint" style="margin-bottom:14px">סופרים <b>יחידים</b>: גליל בודד, בקבוק בודד, כוס בודדת — לא חבילות.<br>"מינימום להזמנה" = כשמגיעים אליו, המערכת מתריעה שצריך להזמין.</div>`;
+  h+=`<div class="card-list">`+invItems().map(([id,it])=>
+    `<div class="inv-take" data-id="${id}">
+      <div class="it-top"><span class="nm">${esc(it.name)}${it.unit?` <span style="color:var(--muted);font-weight:600;font-size:13px">(${esc(it.unit)})</span>`:''}</span></div>
+      <div class="stepper" style="gap:12px">
+        <label class="qm" style="flex:1;flex-direction:column;align-items:stretch;gap:4px;font-size:12.5px">כמה יש עכשיו
+          <input type="number" class="st-qty" value="${+it.qty||0}" min="0" inputmode="numeric" style="width:100%;text-align:center;font-size:18px;font-weight:800"></label>
+        <label class="qm" style="flex:1;flex-direction:column;align-items:stretch;gap:4px;font-size:12.5px">מינימום להזמנה
+          <input type="number" class="st-min" value="${+it.min||0}" min="0" inputmode="numeric" style="width:100%;text-align:center;font-size:18px;font-weight:800"></label>
+      </div></div>`).join('')+`</div>`;
+  h+=`<button class="submit" onclick="saveStocktake(this)">שמירת ספירה ✅</button>`;
+  V().innerHTML=h;
+}
+async function saveStocktake(btn){
+  const changed=[], ops=[];
+  [...V().querySelectorAll('.inv-take')].forEach(r=>{ const id=r.dataset.id, it=INV[id]||{};
+    const q=+r.querySelector('.st-qty').value||0, m=+r.querySelector('.st-min').value||0;
+    if((+it.qty||0)!==q||(+it.min||0)!==m){ ops.push(cPatch('inventory_items/'+id,{qty:q,min:m})); changed.push({id,q,m}); } });
+  if(!ops.length) return toast('לא שינית כלום');
+  const ok=await withBusy(btn,()=>Promise.all(ops));
+  if(ok){ changed.forEach(c=>{ if(INV[c.id]){ INV[c.id].qty=c.q; INV[c.id].min=c.m; } });
+    sheet('נשמר! ✅',`עודכנו ${changed.length} פריטים. מעכשיו הכמות תרד אוטומטית לפי מה שלוקחים 🧡`,'חזרה לבית',viewHome);
+  }
+}
 
 /* ============================================================
    דשבורד ניהולי
@@ -1192,7 +1224,8 @@ function admInv(){
   const list=Object.entries(INV).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
   let h=`<div class="hint" style="margin-bottom:12px">כמות = כמה יש עכשיו · מינימום = כשמגיעים אליו צריך להזמין.</div>`;
   h+=list.map(([id,it])=>`<div class="adm-row" data-id="${id}">
-    <div class="r1"><input type="text" class="f-name" value="${esc(it.name)}" placeholder="שם הפריט" style="flex:1"></div>
+    <div class="r1"><input type="text" class="f-name" value="${esc(it.name)}" placeholder="שם הפריט" style="flex:1">
+      <input type="text" class="f-unit" value="${esc(it.unit||'')}" placeholder="יחידה (גליל/בקבוק)" style="width:150px"></div>
     <div class="r1">
       <label class="qm">כמות<input type="number" class="f-qty" value="${+it.qty||0}" inputmode="numeric"></label>
       <label class="qm">מינ׳<input type="number" class="f-min" value="${+it.min||0}" inputmode="numeric"></label>
@@ -1204,13 +1237,14 @@ function admInv(){
 }
 async function saveInv(id){
   const row=document.querySelector(`.adm-row[data-id="${id}"]`);
-  const obj={name:row.querySelector('.f-name').value.trim(),qty:+row.querySelector('.f-qty').value||0,
-    min:+row.querySelector('.f-min').value||0,active:row.querySelector('.f-active').checked,order:INV[id].order||99};
+  const obj={name:row.querySelector('.f-name').value.trim(),unit:row.querySelector('.f-unit').value.trim(),
+    qty:+row.querySelector('.f-qty').value||0,min:+row.querySelector('.f-min').value||0,
+    active:row.querySelector('.f-active').checked,order:INV[id].order||99};
   await cPut('inventory_items/'+id,obj); INV[id]=obj; toast('נשמר ✓');
 }
 async function addInv(){
   const id='i_'+Date.now(), order=Object.keys(INV).length+1;
-  const obj={name:'פריט חדש',qty:0,min:1,active:true,order}; await cPut('inventory_items/'+id,obj); INV[id]=obj; admInv();
+  const obj={name:'פריט חדש',unit:'',qty:0,min:1,active:true,order}; await cPut('inventory_items/'+id,obj); INV[id]=obj; admInv();
 }
 async function delInv(id){ if(!confirm('למחוק את הפריט?'))return; await cDel('inventory_items/'+id); delete INV[id]; admInv(); }
 
