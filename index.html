@@ -390,10 +390,12 @@ const FALLBACK_STAFF = {
   s7:{name:"טלי",role:"coach",pin:"4444",active:true,order:7},
   s8:{name:"קורן",role:"coach",pin:"5555",active:true,order:8},
   s9:{name:"אריאל",role:"helper",pin:"6666",active:true,order:9,rate:30},
+  s10:{name:"גיא",role:"consultant",pin:"0000",active:true,order:10},
 };
 const ROLES = {
   manager:{he:"ניהול",color:"#fdab3d"}, coach:{he:"מאמן/ת",color:"#3fb950"},
   sales:{he:"שירות ומכירה",color:"#f1c93b"}, helper:{he:"נער עזר",color:"#6db3f2"},
+  consultant:{he:"יועץ תזונה",color:"#a78bfa"},
 };
 
 /* ============================================================
@@ -430,6 +432,7 @@ const ROLE_ACTIONS = {
            view:['feed','inventory-status','office']},
   sales:  {do:['sales-summary'], view:['feed','review','inventory-status','office']},
   helper: {do:['helper-checklist'], view:['inventory-status','stocktake','maint-summary','payroll','office']},
+  consultant:{do:[], view:['office']},
 };
 const ROUTE = {
   'checklist-open':()=>viewChecklist('open'),
