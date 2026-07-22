@@ -621,7 +621,7 @@ async function clockOut(btn){
 async function viewPayroll(){
   loading();
   const shifts=await cGet('time_shifts')||{};
-  const all=Object.values(shifts), isMgr=ME.role==='manager';
+  const all=Object.entries(shifts).map(([k,v])=>({k,...v})), isMgr=ME.role==='manager';
   const t=todayISO(), ws=weekStartTs(), ms=monthStartTs();
   let h=vhead("שעון ושכר 💰","שעות עבודה × תעריף לשעה","viewPayroll()");
   const targets = isMgr ? Object.entries(STAFF).filter(([id,s])=>(+s.rate)>0).sort((a,b)=>(a[1].order||99)-(b[1].order||99)).map(([id])=>id) : [ME.id];
@@ -637,15 +637,18 @@ async function viewPayroll(){
       <div class="kpi"><div class="v">${hm(dWeek)}</div><div class="l">השבוע</div></div>
       <div class="kpi good"><div class="v">${hm(dMonth)}</div><div class="l">החודש</div></div>
       <div class="kpi"><div class="v">₪${money(dMonth,r)}</div><div class="l">שכר החודש</div></div></div>`;
-    if(!isMgr){
-      const recent=mine.sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,12);
-      if(recent.length){ h+=`<div class="sec-title">משמרות אחרונות</div><div class="card-list">`+
-        recent.map(x=>`<div class="inv-row"><span class="nm">${fmtDate(x.date)}</span>
-          <span class="st ok">${hhmm(x.start)}–${hhmm(x.end)} · ${hm(x.minutes)}</span></div>`).join('')+`</div>`; }
-    }
+    const recent=mine.sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,12);
+    if(recent.length){ h+=`<div class="sec-title">משמרות אחרונות${isMgr?' · '+esc(s.name):''}</div><div class="card-list">`+
+      recent.map(x=>`<div class="inv-row"><span class="nm">${fmtDate(x.date)}</span>
+        <span class="st ok">${hhmm(x.start)}–${hhmm(x.end)} · ${hm(x.minutes)}</span>
+        ${isMgr?`<button onclick="delTimeShift('${x.k}')" style="margin-inline-start:8px;background:var(--card2);border:1px solid var(--line);color:var(--red);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer">🗑</button>`:''}</div>`).join('')+`</div>`; }
   });
   V().innerHTML=h;
 }
+async function delTimeShift(k){ if(!confirm('למחוק את רישום המשמרת?'))return;
+  try{ await cDel('time_shifts/'+k); toast('נמחק'); viewPayroll(); }catch(e){ toast('❌ אין חיבור'); } }
+async function delMaintSub(k){ if(!confirm('למחוק את הדיווח?'))return;
+  try{ await cDel('checklist_submissions/'+k); toast('נמחק'); viewMaintSummary(); }catch(e){ toast('❌ אין חיבור'); } }
 
 /* ---------- רכיבי טופס ---------- */
 function seg(group,opts,def){ return `<div class="seg" data-group="${group}">`+opts.map(o=>
@@ -948,7 +951,7 @@ function renderMaintSummary(){
   const isMgr=ME.role==='manager';
   const now=Date.now(), ws=weekStartTs(), ms=monthStartTs(), t=todayISO();
   const inPeriod=x=>{ const ts=x.ts||0; return MSUM_PERIOD==='day'?x.date===t:MSUM_PERIOD==='week'?ts>=ws:ts>=ms; };
-  let sList=Object.values(subs).filter(x=>x.type==='maint'&&inPeriod(x));
+  let sList=Object.entries(subs).map(([k,v])=>({k,...v})).filter(x=>x.type==='maint'&&inPeriod(x));
   let tList=Object.values(txns).filter(x=>inPeriod(x));
   if(!isMgr){ sList=sList.filter(x=>x.staffId===ME.id); tList=tList.filter(x=>x.staffId===ME.id); }
   sList.sort((a,b)=>(b.ts||0)-(a.ts||0));
@@ -969,7 +972,7 @@ function renderMaintSummary(){
       <span class="chip gray">${(x.checked||[]).length}/${x.total||0} משימות</span>
       <span class="spacer"></span><span class="meta">${fmtDate(x.date)} · ${esc(x.time||'')}</span></div>
       ${done.length?`<div class="row"><b>בוצע:</b> ${done.map(esc).join(' · ')}</div>`:''}
-      ${x.note?`<div class="row"><b>הערה:</b> ${esc(x.note)}</div>`:''}</div>`; }).join('')+`</div>`;
+      ${x.note?`<div class="row"><b>הערה:</b> ${esc(x.note)}</div>`:''}${ME.role==='manager'?`<button class="seen-btn" style="color:var(--red);border-color:rgba(242,109,109,.4)" onclick="delMaintSub('${x.k}')">🗑 מחיקה</button>`:''}</div>`; }).join('')+`</div>`;
   V().innerHTML=h;
 }
 
