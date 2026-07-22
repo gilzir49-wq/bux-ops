@@ -855,7 +855,7 @@ function viewInventoryReport(){
   h+=`<div class="hint" style="margin-bottom:12px">ליד כל פריט רשום כמה נשאר. אם לקחת — עדכן/י כמה לקחת עם ➖/➕.</div>`;
   h+=`<div class="card-list">`+invItems().map(([id,it])=>{
     const qty=+it.qty||0, st=invStatus(qty,it.min);
-    return `<div class="inv-take ${st}" data-id="${id}">
+    return `<div class="inv-take ${st}" data-id="${id}" data-qty="${qty}" data-min="${+it.min||0}" data-unit="${esc(it.unit||'')}">
       <div class="it-top"><span class="nm">${esc(it.name)}</span><span class="left st ${st==='order'?'out':st}">נשאר: ${qty}${uSuffix(it)}</span></div>
       <div class="stepper"><span class="stp-lbl">כמה לקחת?</span>
         <button type="button" class="stp" onclick="stepTake('${id}',-1)">−</button>
@@ -868,7 +868,11 @@ function viewInventoryReport(){
 }
 function stepTake(id,d){ const el=document.getElementById('take-'+id);
   el.value=Math.max(0,(+el.value||0)+d);   // אין תקרה — אפשר לסמן כמה שלקחת; לא יורד מתחת ל-0
-  el.closest('.inv-take').style.borderColor = (+el.value>0)?'var(--orange)':''; }
+  const box=el.closest('.inv-take'); box.style.borderColor=(+el.value>0)?'var(--orange)':'';
+  const left=box.querySelector('.left');   // עדכון חי של "נשאר" תוך כדי סימון
+  if(left){ const base=+box.dataset.qty||0, min=+box.dataset.min||0, unit=box.dataset.unit||'';
+    const rem=Math.max(0,base-(+el.value||0)), cls=(x=>x==='order'?'out':x)(invStatus(rem,min));
+    left.className='left st '+cls; left.textContent='נשאר: '+rem+(unit?' '+unit:''); } }
 async function submitInv(btn){
   const changes=[];
   invItems().forEach(([id,it])=>{ const taken=+document.getElementById('take-'+id).value||0;
@@ -904,7 +908,7 @@ function viewHelper(){
   h+=`<div class="sec-title">📦 מילוי מלאי — כמה לקחת מהמחסן?</div>`;
   h+=`<div class="hint" style="margin:-4px 2px 10px">מילאת נייר/סבון? סמן/י כמה לקחת — יורד אוטומטית מהמלאי.</div>`;
   h+=`<div class="card-list">`+invItems().map(([id,it])=>{ const qty=+it.qty||0, st=invStatus(qty,it.min);
-    return `<div class="inv-take ${st}" data-id="${id}">
+    return `<div class="inv-take ${st}" data-id="${id}" data-qty="${qty}" data-min="${+it.min||0}" data-unit="${esc(it.unit||'')}">
       <div class="it-top"><span class="nm">${esc(it.name)}</span><span class="left st ${st==='order'?'out':st}">נשאר: ${qty}${uSuffix(it)}</span></div>
       <div class="stepper"><span class="stp-lbl">כמה לקחת?</span>
         <button type="button" class="stp" onclick="stepTake('${id}',-1)">−</button>
@@ -1050,9 +1054,12 @@ function shiftCard(s, feed){
     h+=`<button class="share-btn" onclick="shareShift('${s.id}')">📲 שיתוף בוואטסאפ</button>`;
     if(seen.includes(ME.name)) h+=`<div class="seen-done">✓ ראית את הסיכום הזה</div>`;
     else if(s.name!==ME.name) h+=`<button class="seen-btn" onclick="ackSeen('${s.id}')">👁 סמן שראיתי</button>`;
+    if(ME.role==='manager') h+=`<button class="seen-btn" style="color:var(--red);border-color:rgba(242,109,109,.4)" onclick="delFeedItem('shift_summaries','${s.id}')">🗑 מחיקת הסיכום</button>`;
   }
   h+=`</div>`; return h;
 }
+async function delFeedItem(node,id){ if(!confirm('למחוק לצמיתות?'))return;
+  try{ await cDel(node+'/'+id); FEED_ITEMS=(FEED_ITEMS||[]).filter(x=>x.id!==id); toast('נמחק'); renderFeed(); }catch(e){ toast('❌ אין חיבור'); } }
 /* בניית טקסט סיכום + שיתוף לוואטסאפ */
 function shiftText(s){
   const L=[`📋 *סיכום משמרת · קרוספיט באקס*`, `${s.name||''} · ${s.shift||''} · ${fmtDate(s.date)}`];
@@ -1115,9 +1122,12 @@ function evalCard(e){
   if(e.goal) h+=`<div class="handoff"><b>🎯 יעד להמשך</b>${esc(e.goal)}</div>`;
   if(e.rec) h+=`<div class="row"><b>המלצה:</b> ${esc(e.rec)}</div>`;
   if(e.followup) h+=`<div class="row"><b>תאריך מעקב:</b> ${fmtDate(e.followup)}</div>`;
-  h+=`<button class="share-btn" onclick="shareEval('${e.id}')">📲 שיתוף בוואטסאפ</button></div>`;
-  return h;
+  h+=`<button class="share-btn" onclick="shareEval('${e.id}')">📲 שיתוף בוואטסאפ</button>`;
+  if(ME&&ME.role==='manager') h+=`<button class="seen-btn" style="color:var(--red);border-color:rgba(242,109,109,.4)" onclick="delEval('${e.id}')">🗑 מחיקה</button>`;
+  h+=`</div>`; return h;
 }
+async function delEval(id){ if(!confirm('למחוק את ההערכה?'))return;
+  try{ await cDel('coach_evaluations/'+id); window._EVALS=(window._EVALS||[]).filter(x=>x.id!==id); toast('נמחק'); renderEvals(); }catch(e){ toast('❌ אין חיבור'); } }
 function rubricLines(e){
   if(!e.scores) return [];
   return RUBRIC.map(r=>{ const n=e.scores[r.k]; if(!n) return null;
@@ -1149,6 +1159,7 @@ function salesCard(s){
   const rows=[['לידים',s.leads],['מכירות',s.sales],['ביטול/הקפאה',s.issues],['משימות פתוחות',s.tasks],['הערות',s.notes]].filter(r=>r[1]);
   h+=rows.map(r=>`<div class="row"><b>${r[0]}:</b> ${esc(r[1])}</div>`).join('');
   if(s.leadsTxt) h+=`<div class="row"><b>פירוט לידים:</b> ${esc(s.leadsTxt)}</div>`;
+  if(ME&&ME.role==='manager') h+=`<button class="seen-btn" style="color:var(--red);border-color:rgba(242,109,109,.4)" onclick="delFeedItem('sales_summaries','${s.id}')">🗑 מחיקה</button>`;
   h+=`</div>`; return h;
 }
 
@@ -1277,24 +1288,24 @@ async function viewDashboard(){
   const evList=Object.values(evals||{}).sort((a,b)=>(b.ts||0)-(a.ts||0));
   let h=vhead("דשבורד ניהולי 📊","מבט על — היום","viewDashboard()");
   h+=`<div class="kpis">
-    <div class="kpi ${pend?'alert':'good'}"><div class="v">${pend}</div><div class="l">ממתינים לבקרה</div></div>
-    <div class="kpi ${injuriesToday.length?'alert':'good'}"><div class="v">${injuriesToday.length}</div><div class="l">פציעות היום</div></div>
-    <div class="kpi ${orderNow.length?'alert':'good'}"><div class="v">${orderNow.length}</div><div class="l">צריך להזמין 🛒</div></div>
-    <div class="kpi"><div class="v">${todaySubs}</div><div class="l">צ'קליסטים היום</div></div>
+    <div class="kpi ${pend?'alert':'good'}" style="cursor:pointer" onclick="go('review')"><div class="v">${pend}</div><div class="l">ממתינים לבקרה ›</div></div>
+    <div class="kpi ${injuriesToday.length?'alert':'good'}" style="cursor:pointer" onclick="go('feed')"><div class="v">${injuriesToday.length}</div><div class="l">פציעות היום ›</div></div>
+    <div class="kpi ${orderNow.length?'alert':'good'}" style="cursor:pointer" onclick="go('order-list')"><div class="v">${orderNow.length}</div><div class="l">צריך להזמין 🛒 ›</div></div>
+    <div class="kpi" style="cursor:pointer" onclick="go('maint-summary')"><div class="v">${todaySubs}</div><div class="l">צ'קליסטים היום ›</div></div>
   </div>`;
   if(injuriesToday.length){ h+=`<div class="sec-title">⚠️ פציעות שדווחו היום</div><div class="card-list">`+
     injuriesToday.map(x=>{ const injs=Array.isArray(x.injuries)&&x.injuries.length?x.injuries:(x.injuryTxt?[x.injuryTxt]:['—']);
-      return `<div class="rec"><div class="rtop"><span class="who">${esc(x.name)}</span><span class="chip evening">${esc(x.shift)}</span></div>${injs.map(t=>`<div class="row">${esc(t)}</div>`).join('')}</div>`; }).join('')+`</div>`; }
+      return `<div class="rec" style="cursor:pointer" onclick="go('feed')"><div class="rtop"><span class="who">${esc(x.name)}</span><span class="chip evening">${esc(x.shift)}</span></div>${injs.map(t=>`<div class="row">${esc(t)}</div>`).join('')}</div>`; }).join('')+`</div>`; }
   if(orderNow.length||lowSoon.length){ h+=`<div class="sec-title">🛒 מלאי — מה להזמין</div><div class="card-list">`+
     [...orderNow,...lowSoon].map(r=>{ const cls=r.st==='order'?'out':'low';
-      return `<div class="inv-row ${cls}"><span class="dot ${cls}"></span><span class="nm">${esc(r.name)}</span><span class="st ${cls}">${r.st==='order'?'להזמין':'מתקרב'} · ${r.qty}/${r.min}</span></div>`; }).join('')+`</div>`; }
+      return `<div class="inv-row ${cls}" style="cursor:pointer" onclick="go('order-list')"><span class="dot ${cls}"></span><span class="nm">${esc(r.name)}</span><span class="st ${cls}">${r.st==='order'?'להזמין':'מתקרב'} · ${r.qty}/${r.min}</span></div>`; }).join('')+`</div>`; }
   if(hourly.length){ h+=`<div class="sec-title">⏱ שעות עובדים · החודש</div><div class="card-list">`+
     hourly.map(([id,s])=>{ const mins=tShifts.filter(x=>x.staffId===id&&(x.ts||x.end||0)>=ms).reduce((a,x)=>a+(+x.minutes||0),0);
-      return `<div class="inv-row"><span class="nm">${esc(s.name)}</span><span class="st ok">${hm(mins)} · ₪${money(mins,s.rate)}</span></div>`; }).join('')+`</div>`; }
+      return `<div class="inv-row" style="cursor:pointer" onclick="go('payroll')"><span class="nm">${esc(s.name)}</span><span class="st ok">${hm(mins)} · ₪${money(mins,s.rate)}</span></div>`; }).join('')+`</div>`; }
   h+=`<div class="sec-title">⭐ הערכות מאמנים אחרונות</div>`;
   if(!evList.length){ h+=`<div class="empty" style="padding:24px"><span class="e">⭐</span>עוד אין הערכות</div>`; }
   else{ h+=`<div class="card-list">`+evList.slice(0,6).map(e=>
-    `<div class="rec"><div class="rtop"><span class="who">${esc(e.ratee)}</span>
+    `<div class="rec" style="cursor:pointer" onclick="go('evals')"><div class="rtop"><span class="who">${esc(e.ratee)}</span>
       <span class="chip ${e.soloOk?'done':'pending'}">${(e.weighted||0).toFixed(2)} / 4</span>
       ${e.safety==='כן'?'<span class="chip injury">בטיחות ⚠️</span>':''}
       <span class="spacer"></span><span class="meta">${esc(e.rater)} · ${fmtDate(e.date)}</span></div>
