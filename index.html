@@ -183,14 +183,28 @@ textarea{min-height:80px;resize:vertical;line-height:1.5}
 .chip.pending{background:rgba(253,171,61,.16);color:var(--orange)}
 .chip.done{background:rgba(63,185,80,.15);color:var(--green)}
 .chip.injury{background:rgba(242,109,109,.18);color:var(--red)}
+.chip.trial-chip{background:rgba(109,179,242,.16);color:var(--blue)}
 .chip.gray{background:var(--card2);color:var(--muted)}
 .rec .row{font-size:13.5px;margin:5px 0;display:flex;gap:6px}
 .rec .row b{color:var(--muted);font-weight:700;flex:0 0 auto}
 .rec .handoff{background:rgba(253,171,61,.09);border:1px solid rgba(253,171,61,.25);border-radius:10px;
   padding:10px 12px;margin-top:8px;font-size:14px}
 .rec .handoff b{color:var(--orange);display:block;font-size:12px;margin-bottom:2px}
+.rec .trial{background:rgba(109,179,242,.09);border:1px solid rgba(109,179,242,.28);border-radius:10px;
+  padding:10px 12px;margin-top:8px;font-size:13.5px}
+.rec .trial b.h{color:var(--blue);display:block;font-size:12px;margin-bottom:3px}
 .mark-done{width:100%;margin-top:10px;background:var(--green);color:#0d2a12;border:none;border-radius:11px;
   padding:12px;font-weight:800;font-size:14.5px;cursor:pointer}
+.seen-btn{width:100%;margin-top:10px;background:var(--card2);color:var(--blue);border:1px solid rgba(109,179,242,.4);
+  border-radius:11px;padding:11px;font-weight:800;font-size:14px;cursor:pointer}
+.seen-done{margin-top:10px;text-align:center;color:var(--green);font-weight:700;font-size:13.5px}
+/* סרגל תאריכים בפיד */
+.datebar{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.datebar input{flex:1}
+.db-clear{background:var(--card);border:1px solid var(--line);color:var(--orange);border-radius:12px;
+  padding:0 14px;height:48px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex:0 0 auto}
+.date-sep{font-size:13px;font-weight:800;color:var(--orange);margin:6px 2px 2px;letter-spacing:.3px}
+.date-sep:first-child{margin-top:0}
 .empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:15px}
 .empty .e{font-size:40px;display:block;margin-bottom:10px}
 
@@ -532,6 +546,12 @@ function viewShiftSummary(){
   h+=`<div class="field"><label>מספר שיעורים שהועברו</label><input type="number" id="classes" min="0" inputmode="numeric" placeholder="למשל 4"></div>`;
   h+=`<div class="field"><label>חשוב להעביר הלאה ➡️</label><div class="hint">ההעברה למשמרת הבאה — מה שחייבים לדעת</div>
     <textarea id="handoff" placeholder="מה שמאמן/ת המשמרת הבאה חייב/ת לדעת…"></textarea></div>`;
+  h+=`<div class="field"><label>היו אימוני ניסיון היום? 🎯</label>${segYN('trial','לא')}
+    <div id="trial-detail" class="hidden" style="margin-top:10px">
+      <input type="text" id="trial-name" placeholder="שם / שמות מתאמני הניסיון" style="margin-bottom:8px">
+      <textarea id="trial-how" placeholder="איך היה? התרשמות מהאימון…" style="margin-bottom:8px"></textarea>
+      <textarea id="trial-next" placeholder="מה להעביר הלאה — מעקב / ניסיון לסגור / למי לפנות…"></textarea>
+    </div></div>`;
   h+=`<div class="field"><label>היו בעיות טכניות/מקצועיות?</label>${segYN('tech','לא')}</div>`;
   h+=`<div class="field"><label>דווחו פציעות/כאבים? <span class="req">*</span></label>${segYN('injury','לא')}
     <div id="injury-detail" class="hidden" style="margin-top:10px"><textarea id="injury-txt" placeholder="פירוט הפציעה/כאב — מי, מה, מתי…"></textarea></div></div>`;
@@ -542,16 +562,20 @@ function viewShiftSummary(){
   h+=`<button class="submit" onclick="submitShift(this)">שליחה לפיד ✅</button>`;
   V().innerHTML=h;
   SEG_HOOK['injury']=v=>document.getElementById('injury-detail').classList.toggle('hidden',v!=='כן');
+  SEG_HOOK['trial']=v=>document.getElementById('trial-detail').classList.toggle('hidden',v!=='כן');
 }
 async function submitShift(btn){
   const shift=segVal('shift'); if(!shift)return toast('בחר/י סוג משמרת');
   if(!segVal('injury'))return toast('חובה לענות על פציעות/כאבים');
   const ok=await withBusy(btn,()=>cPush('shift_summaries',{staffId:ME.id,name:ME.name,date:document.getElementById('date').value,shift,
     involve:segVal('involve'),quality:segVal('quality'),classes:document.getElementById('classes').value,
-    handoff:document.getElementById('handoff').value.trim(),tech:segVal('tech'),injury:segVal('injury'),
+    handoff:document.getElementById('handoff').value.trim(),
+    trial:segVal('trial'),trialName:document.getElementById('trial-name').value.trim(),
+    trialHow:document.getElementById('trial-how').value.trim(),trialNext:document.getElementById('trial-next').value.trim(),
+    tech:segVal('tech'),injury:segVal('injury'),
     injuryTxt:document.getElementById('injury-txt').value.trim(),attention:document.getElementById('attention').value.trim(),
     pro:document.getElementById('pro').value.trim(),feel:segVal('feel'),stars:document.getElementById('stars').value.trim(),
-    status:'pending',reviewedBy:null,reviewedAt:null,ts:Date.now()}));
+    seenBy:[],status:'pending',reviewedBy:null,reviewedAt:null,ts:Date.now()}));
   if(ok) sheet('נשלח לפיד! ✅','הסיכום מופיע עכשיו לכל הצוות וממתין לבקרה של וולנטינה.','חזרה לבית',viewHome);
 }
 
@@ -706,32 +730,77 @@ async function submitHelper(btn){
 /* ============================================================
    פיד סיכומים
    ============================================================ */
+let FEED_ITEMS=[], FEED_DATE='';
 async function viewFeed(){
   loading();
   const [shifts,sales]=await Promise.all([cGet('shift_summaries'),cGet('sales_summaries')]);
-  const items=[];
-  Object.entries(shifts||{}).forEach(([id,s])=>items.push({id,kind:'shift',...s}));
-  Object.entries(sales||{}).forEach(([id,s])=>items.push({id,kind:'sales',...s}));
-  items.sort((a,b)=>(b.ts||0)-(a.ts||0));
-  let h=vhead("פיד סיכומים 🗂️","מה קרה במשמרות — הכי חדש למעלה","viewFeed()");
-  if(!items.length){ h+=`<div class="empty"><span class="e">🗂️</span>עוד אין סיכומים.<br>המאמנים ימלאו בסוף המשמרת.</div>`; V().innerHTML=h; return; }
-  h+=`<div class="card-list">`+items.map(it=>it.kind==='shift'?shiftCard(it):salesCard(it)).join('')+`</div>`;
-  V().innerHTML=h;
+  FEED_ITEMS=[];
+  Object.entries(shifts||{}).forEach(([id,s])=>FEED_ITEMS.push({id,kind:'shift',...s}));
+  Object.entries(sales||{}).forEach(([id,s])=>FEED_ITEMS.push({id,kind:'sales',...s}));
+  FEED_ITEMS.sort((a,b)=>(b.ts||0)-(a.ts||0));
+  renderFeed();
 }
-function shiftCard(s){
+function dateLabel(iso){
+  if(!iso) return '';
+  if(iso===todayISO()) return 'היום · '+fmtDate(iso);
+  const d=new Date(); d.setDate(d.getDate()-1);
+  const y=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  if(iso===y) return 'אתמול · '+fmtDate(iso);
+  return fmtDate(iso);
+}
+function renderFeed(){
+  let h=vhead("פיד סיכומים 🗂️","מה קרה במשמרות — הכי חדש למעלה","viewFeed()");
+  h+=`<div class="datebar"><input type="date" id="feedDate" value="${FEED_DATE}" onchange="FEED_DATE=this.value;renderFeed()">
+    ${FEED_DATE?`<button class="db-clear" onclick="FEED_DATE='';renderFeed()">כל התאריכים ✕</button>`:''}</div>`;
+  let items=FEED_DATE?FEED_ITEMS.filter(x=>x.date===FEED_DATE):FEED_ITEMS;
+  if(!items.length){ h+=`<div class="empty"><span class="e">🗂️</span>${FEED_DATE?'אין סיכומים לתאריך שנבחר':'עוד אין סיכומים.<br>המאמנים ימלאו בסוף המשמרת.'}</div>`; V().innerHTML=h; window.scrollTo(0,0); return; }
+  h+=`<div class="card-list">`;
+  let lastDate=null;
+  items.forEach(it=>{
+    if(it.date!==lastDate){ lastDate=it.date; h+=`<div class="date-sep">📅 ${dateLabel(it.date)}</div>`; }
+    h+= it.kind==='shift'?shiftCard(it,true):salesCard(it);
+  });
+  h+=`</div>`;
+  V().innerHTML=h; window.scrollTo(0,0);
+}
+async function ackSeen(id){
+  try{
+    const cur=await cGet('shift_summaries/'+id+'/seenBy');
+    const arr=Array.isArray(cur)?cur:[];
+    if(!arr.includes(ME.name)) arr.push(ME.name);
+    await cPut('shift_summaries/'+id+'/seenBy', arr);
+    const it=FEED_ITEMS.find(x=>x.id===id); if(it) it.seenBy=arr;
+    toast('👁 סומן שראית'); renderFeed();
+  }catch(e){ toast('❌ אין חיבור — נסה/י שוב'); }
+}
+function shiftCard(s, feed){
   const sc=s.shift==='בוקר'?'morning':'evening';
   let h=`<div class="rec"><div class="rtop"><span class="who">${esc(s.name)}</span>
     <span class="chip ${sc}">${esc(s.shift)}</span>
     <span class="chip ${s.status==='done'?'done':'pending'}">${s.status==='done'?'טופל ✓':'ממתין לבקרה'}</span>
     ${s.injury==='כן'?'<span class="chip injury">פציעה ⚠️</span>':''}
+    ${s.trial==='כן'?'<span class="chip trial-chip">ניסיון 🎯</span>':''}
     <span class="spacer"></span><span class="meta">${fmtDate(s.date)}</span></div>`;
   if(s.handoff) h+=`<div class="handoff"><b>חשוב להעביר הלאה ➡️</b>${esc(s.handoff)}</div>`;
+  if(s.trial==='כן'){
+    h+=`<div class="trial"><b class="h">🎯 אימון ניסיון</b>`;
+    if(s.trialName) h+=`<div><b>מי:</b> ${esc(s.trialName)}</div>`;
+    if(s.trialHow) h+=`<div><b>איך היה:</b> ${esc(s.trialHow)}</div>`;
+    if(s.trialNext) h+=`<div><b>להעביר הלאה:</b> ${esc(s.trialNext)}</div>`;
+    h+=`</div>`;
+  }
   const rows=[['מעורבות',s.involve],['איכות',s.quality],['שיעורים',s.classes],['תחושה',s.feel]].filter(r=>r[1]);
   h+=rows.map(r=>`<div class="row"><b>${r[0]}:</b> ${esc(r[1])}</div>`).join('');
   if(s.injury==='כן'&&s.injuryTxt) h+=`<div class="row"><b>פציעה:</b> ${esc(s.injuryTxt)}</div>`;
   if(s.attention) h+=`<div class="row"><b>למעקב:</b> ${esc(s.attention)}</div>`;
   if(s.pro) h+=`<div class="row"><b>מקצועי:</b> ${esc(s.pro)}</div>`;
   if(s.stars) h+=`<div class="row"><b>בלטו ⭐:</b> ${esc(s.stars)}</div>`;
+  const seen=Array.isArray(s.seenBy)?s.seenBy:[];
+  if(seen.length) h+=`<div class="row"><b>👁 ראו:</b> ${seen.map(esc).join(', ')}</div>`;
+  if(feed){
+    if(seen.includes(ME.name)) h+=`<div class="seen-done">✓ ראית את הסיכום הזה</div>`;
+    else if(s.name!==ME.name) h+=`<button class="seen-btn" onclick="ackSeen('${s.id}')">👁 סמן שראיתי</button>`;
+  }
   h+=`</div>`; return h;
 }
 function salesCard(s){
