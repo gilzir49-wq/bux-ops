@@ -25,10 +25,17 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Rubik,Arial,sans-serif;
   background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5;
   padding-bottom:env(safe-area-inset-bottom);
+  -webkit-text-size-adjust:100%; text-size-adjust:100%;
 }
-button{font-family:inherit}
+button{font-family:inherit;touch-action:manipulation}
 input,textarea,select{font-family:inherit}
+a,button,.check,.action,.staff-btn,.seg-b,.tab,.sub-tab{touch-action:manipulation}
 .hidden{display:none!important}
+/* באנר אופליין */
+#offline{position:fixed;top:0;left:0;right:0;z-index:80;background:var(--red);color:#3a0e0e;
+  text-align:center;font-weight:800;font-size:13.5px;padding:calc(env(safe-area-inset-top) + 7px) 10px 7px;
+  transform:translateY(-100%);transition:transform .2s}
+#offline.show{transform:translateY(0)}
 
 /* ===== התחברות ===== */
 #screen-login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px}
@@ -85,6 +92,10 @@ input,textarea,select{font-family:inherit}
   border-radius:12px;font-size:20px;cursor:pointer;flex:0 0 auto}
 .vhead h2{margin:0;font-size:20px;font-weight:800}
 .vhead .sub{font-size:12.5px;color:var(--muted);font-weight:500}
+.vhead .spc{flex:1}
+.vhead .refresh{background:var(--card);border:1px solid var(--line);color:var(--orange);width:40px;height:40px;
+  border-radius:12px;font-size:18px;cursor:pointer;flex:0 0 auto}
+.vhead .refresh:active{transform:rotate(90deg)}
 
 /* באנר משמרת + סקשנים + פעולות בית */
 .shift-banner{border-radius:14px;padding:12px 14px;margin-bottom:18px;font-weight:700;display:flex;
@@ -116,7 +127,7 @@ input,textarea,select{font-family:inherit}
 .field .hint{font-size:12px;color:var(--muted);font-weight:500;margin:0 0 8px}
 input[type=text],input[type=number],input[type=date],textarea,select{
   width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:12px;
-  padding:13px 14px;font-size:15px;outline:none}
+  padding:13px 14px;font-size:16px;outline:none}
 input:focus,textarea:focus,select:focus{border-color:var(--orange)}
 textarea{min-height:80px;resize:vertical;line-height:1.5}
 .seg{display:flex;flex-wrap:wrap;gap:8px}
@@ -210,7 +221,7 @@ textarea{min-height:80px;resize:vertical;line-height:1.5}
 .tab.sel{background:var(--orange);border-color:var(--orange);color:#1c1c1c;font-weight:800}
 .adm-row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
 .adm-row .r1{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.adm-row input,.adm-row select{padding:9px 11px;font-size:14px}
+.adm-row input,.adm-row select{padding:9px 11px;font-size:16px}
 .adm-row .del{background:rgba(242,109,109,.13);border:1px solid rgba(242,109,109,.3);color:var(--red);
   border-radius:9px;padding:8px 11px;font-size:13px;font-weight:700;cursor:pointer;flex:0 0 auto}
 .adm-row .save{background:var(--green);border:none;color:#0d2a12;border-radius:9px;padding:8px 13px;
@@ -245,6 +256,7 @@ textarea{min-height:80px;resize:vertical;line-height:1.5}
 </style>
 </head>
 <body>
+<div id="offline">📴 אין חיבור לאינטרנט — נתונים לא יישמרו עד שהחיבור יחזור</div>
 
 <!-- =================== התחברות =================== -->
 <section id="screen-login">
@@ -285,11 +297,13 @@ const CLOUD = {
   node: "bux-ops"
 };
 const U = p => `${CLOUD.base}/${CLOUD.node}/${p}.json`;
-async function cGet(p){ try{const r=await fetch(U(p));return await r.json();}catch(e){return null;} }
-async function cPush(p,o){ const r=await fetch(U(p),{method:'POST',body:JSON.stringify(o)});return await r.json(); }
-async function cPut(p,o){ const r=await fetch(U(p),{method:'PUT',body:JSON.stringify(o)});return await r.json(); }
-async function cPatch(p,o){ const r=await fetch(U(p),{method:'PATCH',body:JSON.stringify(o)});return await r.json(); }
-async function cDel(p){ await fetch(U(p),{method:'DELETE'}); }
+async function cGet(p){ try{const r=await fetch(U(p));if(!r.ok)throw 0;return await r.json();}catch(e){return null;} }
+async function cWrite(method,p,o){ const r=await fetch(U(p),{method,body:o?JSON.stringify(o):undefined});
+  if(!r.ok) throw new Error('net'); return method==='DELETE'?true:await r.json(); }
+const cPush =(p,o)=>cWrite('POST',p,o);
+const cPut  =(p,o)=>cWrite('PUT',p,o);
+const cPatch=(p,o)=>cWrite('PATCH',p,o);
+const cDel  =(p)=>cWrite('DELETE',p);
 
 /* גיבוי מקומי (אם הענן ריק) */
 const FALLBACK_STAFF = {
@@ -420,9 +434,18 @@ function logout(){ localStorage.removeItem('bux_ops_me');ME=null;
    ============================================================ */
 const V=()=>document.getElementById('view');
 function go(action){ (ROUTE[action]||viewHome)(); window.scrollTo(0,0); }
-function vhead(title,sub){ return `<div class="vhead"><button class="back" onclick="viewHome()">→</button>
-  <div><h2>${title}</h2>${sub?`<div class="sub">${sub}</div>`:''}</div></div>`; }
+function vhead(title,sub,refresh){ return `<div class="vhead"><button class="back" onclick="viewHome()">→</button>
+  <div><h2>${title}</h2>${sub?`<div class="sub">${sub}</div>`:''}</div>
+  ${refresh?`<div class="spc"></div><button class="refresh" onclick="${refresh}" title="רענון">⟳</button>`:''}</div>`; }
 function loading(){ V().innerHTML=`<div class="loading">טוען… 🧡</div>`; }
+/* שליחה בטוחה: מונע לחיצה כפולה, מחכה לאישור אמיתי מהענן, ומודיע על כשל בלי לרמות */
+async function withBusy(btn,fn){
+  if(btn&&btn._busy) return false;
+  if(btn){ btn._busy=true; btn._t=btn.textContent; btn.disabled=true; btn.textContent='שולח… ⏳'; }
+  try{ await fn(); return true; }
+  catch(e){ toast('❌ אין חיבור — לא נשלח, נסה/י שוב'); return false; }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=btn._t; btn._busy=false; } }
+}
 function toast(msg){ const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200); }
 function sheet(title,body,btn="הבנתי 🧡",cb){
   const bg=document.createElement('div');bg.className='modal-bg';
@@ -482,18 +505,18 @@ function viewChecklist(type){
       <div><div class="txt">${esc(c.text)}</div>${c.help?`<div class="help">${esc(c.help)}</div>`:''}</div></div>`).join('')+`</div>`;
   h+=`<div class="field" style="margin-top:16px"><label>תקלה / הערה חופשית</label>
     <textarea id="note" placeholder="משהו שלא תקין? נשבר? חסר? כתוב כאן…"></textarea></div>`;
-  h+=`<button class="submit" onclick="submitChecklist('${type}')">שליחה ✅</button>`;
+  h+=`<button class="submit" onclick="submitChecklist('${type}',this)">שליחה ✅</button>`;
   V().innerHTML=h;
 }
 function toggleCheck(el){ el.classList.toggle('on');
   const done=V().querySelectorAll('.check.on').length, all=V().querySelectorAll('.check').length;
   document.getElementById('cprog').textContent=`${done} / ${all} סומנו`; }
-async function submitChecklist(type){
+async function submitChecklist(type,btn){
   const shift=segVal('shift'); if(!shift)return toast('בחר/י סוג משמרת');
   const checked=[...V().querySelectorAll('.check.on')].map(e=>e.dataset.id);
-  await cPush('checklist_submissions',{staffId:ME.id,name:ME.name,type,shift,date:todayISO(),time:nowTime(),
-    checked,total:V().querySelectorAll('.check').length,note:document.getElementById('note').value.trim(),ts:Date.now()});
-  sheet('נשלח! ✅',`הצ'קליסט נשמר. תודה ${esc(ME.name.split(' ')[0])} 🧡`,'חזרה לבית',viewHome);
+  const ok=await withBusy(btn,()=>cPush('checklist_submissions',{staffId:ME.id,name:ME.name,type,shift,date:todayISO(),time:nowTime(),
+    checked,total:V().querySelectorAll('.check').length,note:document.getElementById('note').value.trim(),ts:Date.now()}));
+  if(ok) sheet('נשלח! ✅',`הצ'קליסט נשמר. תודה ${esc(ME.name.split(' ')[0])} 🧡`,'חזרה לבית',viewHome);
 }
 
 /* ============================================================
@@ -516,20 +539,20 @@ function viewShiftSummary(){
   h+=`<div class="field"><label>הערות מקצועיות / דגשים לאימון</label><textarea id="pro" placeholder="דגשים, תנועות, סקיילינג…"></textarea></div>`;
   h+=`<div class="field"><label>תחושת המשמרת</label>${seg('feel',['מצוינת','סבירה','קשה'])}</div>`;
   h+=`<div class="field"><label>מתאמנים שבלטו לטובה ⭐</label><textarea id="stars" placeholder="שמות מי שהרשים היום…"></textarea></div>`;
-  h+=`<button class="submit" onclick="submitShift()">שליחה לפיד ✅</button>`;
+  h+=`<button class="submit" onclick="submitShift(this)">שליחה לפיד ✅</button>`;
   V().innerHTML=h;
   SEG_HOOK['injury']=v=>document.getElementById('injury-detail').classList.toggle('hidden',v!=='כן');
 }
-async function submitShift(){
+async function submitShift(btn){
   const shift=segVal('shift'); if(!shift)return toast('בחר/י סוג משמרת');
   if(!segVal('injury'))return toast('חובה לענות על פציעות/כאבים');
-  await cPush('shift_summaries',{staffId:ME.id,name:ME.name,date:document.getElementById('date').value,shift,
+  const ok=await withBusy(btn,()=>cPush('shift_summaries',{staffId:ME.id,name:ME.name,date:document.getElementById('date').value,shift,
     involve:segVal('involve'),quality:segVal('quality'),classes:document.getElementById('classes').value,
     handoff:document.getElementById('handoff').value.trim(),tech:segVal('tech'),injury:segVal('injury'),
     injuryTxt:document.getElementById('injury-txt').value.trim(),attention:document.getElementById('attention').value.trim(),
     pro:document.getElementById('pro').value.trim(),feel:segVal('feel'),stars:document.getElementById('stars').value.trim(),
-    status:'pending',reviewedBy:null,reviewedAt:null,ts:Date.now()});
-  sheet('נשלח לפיד! ✅','הסיכום מופיע עכשיו לכל הצוות וממתין לבקרה של וולנטינה.','חזרה לבית',viewHome);
+    status:'pending',reviewedBy:null,reviewedAt:null,ts:Date.now()}));
+  if(ok) sheet('נשלח לפיד! ✅','הסיכום מופיע עכשיו לכל הצוות וממתין לבקרה של וולנטינה.','חזרה לבית',viewHome);
 }
 
 /* ============================================================
@@ -544,15 +567,15 @@ function viewSalesSummary(){
   h+=`<div class="field"><label>בקשות ביטול / הקפאה / בעיית תשלום</label><textarea id="issues" placeholder="מי ומה…"></textarea></div>`;
   h+=`<div class="field"><label>משימות שירות פתוחות</label><textarea id="tasks" placeholder="מה נשאר לטפל בו…"></textarea></div>`;
   h+=`<div class="field"><label>הערות</label><textarea id="notes" placeholder="עוד משהו…"></textarea></div>`;
-  h+=`<button class="submit" onclick="submitSales()">שליחה ✅</button>`;
+  h+=`<button class="submit" onclick="submitSales(this)">שליחה ✅</button>`;
   V().innerHTML=h;
 }
-async function submitSales(){
-  await cPush('sales_summaries',{staffId:ME.id,name:ME.name,date:document.getElementById('date').value,
+async function submitSales(btn){
+  const ok=await withBusy(btn,()=>cPush('sales_summaries',{staffId:ME.id,name:ME.name,date:document.getElementById('date').value,
     leads:document.getElementById('leads').value,leadsTxt:document.getElementById('leadsTxt').value.trim(),
     sales:document.getElementById('sales').value.trim(),issues:document.getElementById('issues').value.trim(),
-    tasks:document.getElementById('tasks').value.trim(),notes:document.getElementById('notes').value.trim(),ts:Date.now()});
-  sheet('נשמר! ✅','סיכום השירות/מכירה נשמר בפיד.','חזרה לבית',viewHome);
+    tasks:document.getElementById('tasks').value.trim(),notes:document.getElementById('notes').value.trim(),ts:Date.now()}));
+  if(ok) sheet('נשמר! ✅','סיכום השירות/מכירה נשמר בפיד.','חזרה לבית',viewHome);
 }
 
 /* ============================================================
@@ -594,7 +617,7 @@ function viewCoachEval(){
   h+=`<div class="field"><label>תאריך מעקב</label><input type="date" id="followup"></div>`;
   h+=`<div class="score-box"><div class="sv" id="score">—</div><div class="sl">ציון משוקלל (מתוך 4)</div>
     <div class="verdict" id="verdict" style="display:none"></div></div>`;
-  h+=`<button class="submit" onclick="submitEval()">שמירת הערכה ✅</button>`;
+  h+=`<button class="submit" onclick="submitEval(this)">שמירת הערכה ✅</button>`;
   V().innerHTML=h;
   SEG_HOOK['safety']=()=>updateScore();
 }
@@ -609,17 +632,17 @@ function updateScore(){
     vd.className='verdict '+(pass?'ok':'no'); vd.textContent=pass?'רשאי/ת להעביר לבד ✅':(safety==='כן'?'דגל בטיחות אדום ⛔':'עדיין לא — להמשיך חפיפה ⛔'); }
   else vd.style.display='none';
 }
-async function submitEval(){
+async function submitEval(btn){
   if(!document.getElementById('ratee').value)return toast('בחר/י מי מוערך/ת');
   const {s,haveAll}=calcScore(); if(!haveAll)return toast('מלא/י את כל 6 הקריטריונים');
   if(!segVal('safety'))return toast('ענה/י על שאלת הבטיחות');
   const safety=segVal('safety'), pass=(s>=3.0 && safety!=='כן');
-  await cPush('coach_evaluations',{ratee:document.getElementById('ratee').value,rater:ME.name,date:document.getElementById('date').value,
+  const ok=await withBusy(btn,()=>cPush('coach_evaluations',{ratee:document.getElementById('ratee').value,rater:ME.name,date:document.getElementById('date').value,
     ctx:segVal('ctx'),wod:document.getElementById('wod').value.trim(),scores:{...RUBRIC_SCORES},weighted:+s.toFixed(2),
     safety,hier:segVal('hier'),strong:document.getElementById('strong').value.trim(),improve:document.getElementById('improve').value.trim(),
     talk:document.getElementById('talk').value.trim(),goal:document.getElementById('goal').value.trim(),rec:segVal('rec'),
-    followup:document.getElementById('followup').value,soloOk:pass,ts:Date.now()});
-  sheet(pass?'הערכה נשמרה ✅':'הערכה נשמרה','ציון משוקלל: '+s.toFixed(2)+' מתוך 4'+(pass?' · רשאי/ת להעביר לבד':' · עדיין בחפיפה'),'חזרה לבית',viewHome);
+    followup:document.getElementById('followup').value,soloOk:pass,ts:Date.now()}));
+  if(ok) sheet(pass?'הערכה נשמרה ✅':'הערכה נשמרה','ציון משוקלל: '+s.toFixed(2)+' מתוך 4'+(pass?' · רשאי/ת להעביר לבד':' · עדיין בחפיפה'),'חזרה לבית',viewHome);
 }
 
 /* ============================================================
@@ -636,14 +659,14 @@ function viewInventoryReport(){
        <button type="button" class="seg-b" data-val="out" onclick="segPick(this,'inv-${id}')">נגמר</button>
      </div></div>`).join('')+`</div>`;
   h+=`<div class="field" style="margin-top:14px"><label>הערות</label><textarea id="invNote" placeholder="פרטים על מה שחסר…"></textarea></div>`;
-  h+=`<button class="submit" onclick="submitInv()">שליחת דיווח ✅</button>`;
+  h+=`<button class="submit" onclick="submitInv(this)">שליחת דיווח ✅</button>`;
   V().innerHTML=h;
 }
-async function submitInv(){
+async function submitInv(btn){
   const items={}; invItems().forEach(([id])=>{ items[id]=segVal('inv-'+id)||'ok'; });
-  await cPush('inventory_reports',{staffId:ME.id,name:ME.name,date:todayISO(),time:nowTime(),items,
-    note:document.getElementById('invNote').value.trim(),ts:Date.now()});
-  sheet('דיווח נשלח! ✅','"מצב מלאי נוכחי" התעדכן לכולם.','חזרה לבית',viewHome);
+  const ok=await withBusy(btn,()=>cPush('inventory_reports',{staffId:ME.id,name:ME.name,date:todayISO(),time:nowTime(),items,
+    note:document.getElementById('invNote').value.trim(),ts:Date.now()}));
+  if(ok) sheet('דיווח נשלח! ✅','"מצב מלאי נוכחי" התעדכן לכולם.','חזרה לבית',viewHome);
 }
 
 /* ============================================================
@@ -666,18 +689,18 @@ function viewHelper(){
        <button type="button" class="seg-b" data-val="out" onclick="segPick(this,'inv-${id}')">נגמר</button>
      </div></div>`).join('')+`</div>`;
   h+=`<div class="field" style="margin-top:14px"><label>משימות היום / הערות</label><textarea id="helperTasks" placeholder="מה עשית / מה נשאר…"></textarea></div>`;
-  h+=`<button class="submit" onclick="submitHelper()">שליחה ✅</button>`;
+  h+=`<button class="submit" onclick="submitHelper(this)">שליחה ✅</button>`;
   V().innerHTML=h;
 }
-async function submitHelper(){
+async function submitHelper(btn){
   const checked=[...V().querySelectorAll('.check.on')].map(e=>e.dataset.id);
   const items={}; invItems().forEach(([id])=>{ items[id]=segVal('inv-'+id)||'ok'; });
   const note=document.getElementById('helperTasks').value.trim();
-  await Promise.all([
+  const ok=await withBusy(btn,()=>Promise.all([
     cPush('checklist_submissions',{staffId:ME.id,name:ME.name,type:'maint',shift:'—',date:todayISO(),time:nowTime(),checked,total:V().querySelectorAll('.check').length,note,ts:Date.now()}),
     cPush('inventory_reports',{staffId:ME.id,name:ME.name,date:todayISO(),time:nowTime(),items,note,ts:Date.now()})
-  ]);
-  sheet('נשלח! ✅',`כל הכבוד ${esc(ME.name.split(' ')[0])} 🧡`,'חזרה לבית',viewHome);
+  ]));
+  if(ok) sheet('נשלח! ✅',`כל הכבוד ${esc(ME.name.split(' ')[0])} 🧡`,'חזרה לבית',viewHome);
 }
 
 /* ============================================================
@@ -690,7 +713,7 @@ async function viewFeed(){
   Object.entries(shifts||{}).forEach(([id,s])=>items.push({id,kind:'shift',...s}));
   Object.entries(sales||{}).forEach(([id,s])=>items.push({id,kind:'sales',...s}));
   items.sort((a,b)=>(b.ts||0)-(a.ts||0));
-  let h=vhead("פיד סיכומים 🗂️","מה קרה במשמרות — הכי חדש למעלה");
+  let h=vhead("פיד סיכומים 🗂️","מה קרה במשמרות — הכי חדש למעלה","viewFeed()");
   if(!items.length){ h+=`<div class="empty"><span class="e">🗂️</span>עוד אין סיכומים.<br>המאמנים ימלאו בסוף המשמרת.</div>`; V().innerHTML=h; return; }
   h+=`<div class="card-list">`+items.map(it=>it.kind==='shift'?shiftCard(it):salesCard(it)).join('')+`</div>`;
   V().innerHTML=h;
@@ -727,7 +750,7 @@ async function viewReview(){
   loading();
   const shifts=await cGet('shift_summaries')||{};
   const pending=Object.entries(shifts).map(([id,s])=>({id,...s})).filter(s=>s.status==='pending').sort((a,b)=>(a.ts||0)-(b.ts||0));
-  let h=vhead("תור בקרה 🔎","עבור/י, עדכן/י בארבוקס, וסמן/י טופל");
+  let h=vhead("תור בקרה 🔎","עבור/י, עדכן/י בארבוקס, וסמן/י טופל","viewReview()");
   if(!pending.length){ h+=`<div class="empty"><span class="e">✨</span>אין מה לבקר — הכל טופל!</div>`; V().innerHTML=h; return; }
   h+=`<div class="card-list">`+pending.map(s=>{
     const c=shiftCard(s);            // מסתיים ב-</div>
@@ -753,7 +776,7 @@ async function viewInventoryStatus(){
   const rank={out:0,low:1,ok:2,na:3};
   const rows=items.map(([id,it])=>({id,name:it.name,...(current[id]||{status:'na'})}))
     .sort((a,b)=>(rank[a.status]??3)-(rank[b.status]??3));
-  let h=vhead("מצב מלאי 🚦","נגזר מהדיווח האחרון · חוסר צף למעלה");
+  let h=vhead("מצב מלאי 🚦","נגזר מהדיווח האחרון · חוסר צף למעלה","viewInventoryStatus()");
   const label={ok:'תקין',low:'עומד להיגמר',out:'נגמר',na:'אין דיווח'};
   h+=`<div class="card-list">`+rows.map(r=>
     `<div class="inv-row ${r.status}"><span class="dot ${r.status==='na'?'':r.status}"></span>
@@ -779,7 +802,7 @@ async function viewDashboard(){
   const invAlerts=Object.entries(cur).filter(([iid,st])=>st==='out'||st==='low');
   const outCount=Object.values(cur).filter(s=>s==='out').length;
   const evList=Object.values(evals||{}).sort((a,b)=>(b.ts||0)-(a.ts||0));
-  let h=vhead("דשבורד ניהולי 📊","מבט על — היום");
+  let h=vhead("דשבורד ניהולי 📊","מבט על — היום","viewDashboard()");
   h+=`<div class="kpis">
     <div class="kpi ${pend?'alert':'good'}"><div class="v">${pend}</div><div class="l">ממתינים לבקרה</div></div>
     <div class="kpi ${injuriesToday.length?'alert':'good'}"><div class="v">${injuriesToday.length}</div><div class="l">פציעות היום</div></div>
@@ -894,10 +917,24 @@ async function addInv(){
 async function delInv(id){ if(!confirm('למחוק את הפריט?'))return; await cDel('inventory_items/'+id); delete INV[id]; admInv(); }
 
 /* ============================================================
+   עמידות: אופליין, טיפול בכשלים, service worker
+   ============================================================ */
+function updateOnline(){ document.getElementById('offline').classList.toggle('show', !navigator.onLine); }
+window.addEventListener('online', ()=>{ updateOnline(); toast('✅ החיבור חזר'); });
+window.addEventListener('offline', updateOnline);
+// כשל בכתיבה למסך הניהול (הפעולות שם קוראות ישירות לענן) — הודעה במקום כשל שקט
+window.addEventListener('unhandledrejection', e=>{
+  const msg=String(e&&e.reason&&e.reason.message||e.reason||'');
+  if(msg.includes('net')||!navigator.onLine){ toast('❌ לא נשמר — בדוק/י חיבור'); e.preventDefault(); }
+});
+if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+
+/* ============================================================
    אתחול
    ============================================================ */
 (async function init(){
   buildPad();
+  updateOnline();
   await loadConfig();
   const saved=localStorage.getItem('bux_ops_me');
   if(saved&&STAFF[saved]&&STAFF[saved].active) loginAs(saved);
