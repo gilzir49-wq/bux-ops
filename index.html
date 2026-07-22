@@ -246,6 +246,11 @@ textarea{min-height:80px;resize:vertical;line-height:1.5}
 .stepper .take{width:60px;text-align:center;font-size:20px;font-weight:800;padding:10px 4px;flex:0 0 auto}
 .copy-box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:15px;
   font-weight:600;line-height:1.9;margin-bottom:12px}
+/* בלוקים חוזרים (ניסיונות/פציעות מרובים) */
+.rep-entry{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.rep-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:14px}
+.rep-del{background:rgba(242,109,109,.13);border:1px solid rgba(242,109,109,.3);color:var(--red);
+  border-radius:8px;padding:5px 10px;font-size:12.5px;font-weight:700;cursor:pointer}
 .adm-row .qm{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);flex:0 0 auto}
 .adm-row .qm input{width:56px;text-align:center}
 
@@ -665,32 +670,53 @@ function viewShiftSummary(){
     <textarea id="handoff" placeholder="מה שמאמן/ת המשמרת הבאה חייב/ת לדעת…"></textarea></div>`;
   h+=`<div class="field"><label>היו אימוני ניסיון היום? 🎯</label>${segYN('trial','לא')}
     <div id="trial-detail" class="hidden" style="margin-top:10px">
-      <input type="text" id="trial-name" placeholder="שם / שמות מתאמני הניסיון" style="margin-bottom:8px">
-      <textarea id="trial-how" placeholder="איך היה? התרשמות מהאימון…" style="margin-bottom:8px"></textarea>
-      <textarea id="trial-next" placeholder="מה להעביר הלאה — מעקב / ניסיון לסגור / למי לפנות…"></textarea>
+      <div id="trials-list"></div>
+      <button type="button" class="add-btn" onclick="addTrial()">＋ הוספת אימון ניסיון</button>
     </div></div>`;
-  h+=`<div class="field"><label>היו בעיות טכניות/מקצועיות?</label>${segYN('tech','לא')}</div>`;
+  h+=`<div class="field"><label>היו בעיות טכניות/מקצועיות?</label>${segYN('tech','לא')}
+    <div id="tech-detail" class="hidden" style="margin-top:10px">
+      <textarea id="tech-txt" placeholder="מה הייתה הבעיה? מה קרה, מה צריך לתקן…"></textarea></div></div>`;
   h+=`<div class="field"><label>דווחו פציעות/כאבים? <span class="req">*</span></label>${segYN('injury','לא')}
-    <div id="injury-detail" class="hidden" style="margin-top:10px"><textarea id="injury-txt" placeholder="פירוט הפציעה/כאב — מי, מה, מתי…"></textarea></div></div>`;
+    <div id="injury-detail" class="hidden" style="margin-top:10px">
+      <div id="injuries-list"></div>
+      <button type="button" class="add-btn" onclick="addInjury()">＋ הוספת פציעה נוספת</button>
+    </div></div>`;
   h+=`<div class="field"><label>מתאמנים שדורשים תשומת לב / מעקב</label><textarea id="attention" placeholder="שמות + למה…"></textarea></div>`;
   h+=`<div class="field"><label>הערות מקצועיות / דגשים לאימון</label><textarea id="pro" placeholder="דגשים, תנועות, סקיילינג…"></textarea></div>`;
   h+=`<div class="field"><label>תחושת המשמרת</label>${seg('feel',['מצוינת','סבירה','קשה'])}</div>`;
   h+=`<div class="field"><label>מתאמנים שבלטו לטובה ⭐</label><textarea id="stars" placeholder="שמות מי שהרשים היום…"></textarea></div>`;
   h+=`<button class="submit" onclick="submitShift(this)">שליחה לפיד ✅</button>`;
   V().innerHTML=h;
-  SEG_HOOK['injury']=v=>document.getElementById('injury-detail').classList.toggle('hidden',v!=='כן');
-  SEG_HOOK['trial']=v=>document.getElementById('trial-detail').classList.toggle('hidden',v!=='כן');
+  SEG_HOOK['injury']=v=>{ const d=document.getElementById('injury-detail'); d.classList.toggle('hidden',v!=='כן');
+    if(v==='כן'&&!document.querySelector('#injuries-list .rep-entry')) addInjury(); };
+  SEG_HOOK['trial']=v=>{ const d=document.getElementById('trial-detail'); d.classList.toggle('hidden',v!=='כן');
+    if(v==='כן'&&!document.querySelector('#trials-list .rep-entry')) addTrial(); };
+  SEG_HOOK['tech']=v=>document.getElementById('tech-detail').classList.toggle('hidden',v!=='כן');
 }
+function addTrial(){ const L=document.getElementById('trials-list'); const d=document.createElement('div'); d.className='rep-entry';
+  d.innerHTML=`<div class="rep-head"><b>🎯 אימון ניסיון</b><button type="button" class="rep-del" onclick="this.closest('.rep-entry').remove()">הסר ✕</button></div>
+    <input type="text" class="tr-name" placeholder="שם המתאמן" style="margin-bottom:8px">
+    <textarea class="tr-how" placeholder="איך היה? התרשמות…" style="margin-bottom:8px"></textarea>
+    <textarea class="tr-next" placeholder="מה להעביר הלאה — מעקב / ניסיון לסגור / למי לפנות…"></textarea>`;
+  L.appendChild(d); }
+function addInjury(){ const L=document.getElementById('injuries-list'); const d=document.createElement('div'); d.className='rep-entry';
+  d.innerHTML=`<div class="rep-head"><b>⚠️ פציעה</b><button type="button" class="rep-del" onclick="this.closest('.rep-entry').remove()">הסר ✕</button></div>
+    <textarea class="inj-txt" placeholder="שם המתאמן + פירוט הפציעה/כאב — מה, מתי…"></textarea>`;
+  L.appendChild(d); }
 async function submitShift(btn){
   const shift=segVal('shift'); if(!shift)return toast('בחר/י סוג משמרת');
   if(!segVal('injury'))return toast('חובה לענות על פציעות/כאבים');
+  const trials=[...document.querySelectorAll('#trials-list .rep-entry')].map(e=>({
+    name:e.querySelector('.tr-name').value.trim(),how:e.querySelector('.tr-how').value.trim(),next:e.querySelector('.tr-next').value.trim()
+  })).filter(t=>t.name||t.how||t.next);
+  const injuries=[...document.querySelectorAll('#injuries-list .rep-entry')].map(e=>e.querySelector('.inj-txt').value.trim()).filter(Boolean);
   const ok=await withBusy(btn,()=>cPush('shift_summaries',{staffId:ME.id,name:ME.name,date:document.getElementById('date').value,shift,
     involve:segVal('involve'),quality:segVal('quality'),classes:document.getElementById('classes').value,
     handoff:document.getElementById('handoff').value.trim(),
-    trial:segVal('trial'),trialName:document.getElementById('trial-name').value.trim(),
-    trialHow:document.getElementById('trial-how').value.trim(),trialNext:document.getElementById('trial-next').value.trim(),
-    tech:segVal('tech'),injury:segVal('injury'),
-    injuryTxt:document.getElementById('injury-txt').value.trim(),attention:document.getElementById('attention').value.trim(),
+    trial:segVal('trial'),trials,
+    tech:segVal('tech'),techTxt:document.getElementById('tech-txt').value.trim(),
+    injury:segVal('injury'),injuries,
+    attention:document.getElementById('attention').value.trim(),
     pro:document.getElementById('pro').value.trim(),feel:segVal('feel'),stars:document.getElementById('stars').value.trim(),
     seenBy:[],status:'pending',reviewedBy:null,reviewedAt:null,ts:Date.now()}));
   if(ok) sheet('נשלח לפיד! ✅','הסיכום מופיע עכשיו לכל הצוות וממתין לבקרה של וולנטינה.','חזרה לבית',viewHome);
@@ -809,8 +835,8 @@ function viewInventoryReport(){
   h+=`<button class="submit" onclick="submitInv(this)">עדכון מלאי ✅</button>`;
   V().innerHTML=h;
 }
-function stepTake(id,d){ const el=document.getElementById('take-'+id); const max=+el.max||0;
-  el.value=Math.max(0,Math.min(max,(+el.value||0)+d));
+function stepTake(id,d){ const el=document.getElementById('take-'+id);
+  el.value=Math.max(0,(+el.value||0)+d);   // אין תקרה — אפשר לסמן כמה שלקחת; לא יורד מתחת ל-0
   el.closest('.inv-take').style.borderColor = (+el.value>0)?'var(--orange)':''; }
 async function submitInv(btn){
   const changes=[];
@@ -968,15 +994,22 @@ function shiftCard(s, feed){
     <span class="spacer"></span><span class="meta">${fmtDate(s.date)}</span></div>`;
   if(s.handoff) h+=`<div class="handoff"><b>חשוב להעביר הלאה ➡️</b>${esc(s.handoff)}</div>`;
   if(s.trial==='כן'){
-    h+=`<div class="trial"><b class="h">🎯 אימון ניסיון</b>`;
-    if(s.trialName) h+=`<div><b>מי:</b> ${esc(s.trialName)}</div>`;
-    if(s.trialHow) h+=`<div><b>איך היה:</b> ${esc(s.trialHow)}</div>`;
-    if(s.trialNext) h+=`<div><b>להעביר הלאה:</b> ${esc(s.trialNext)}</div>`;
-    h+=`</div>`;
+    const trials=Array.isArray(s.trials)&&s.trials.length?s.trials:((s.trialName||s.trialHow||s.trialNext)?[{name:s.trialName,how:s.trialHow,next:s.trialNext}]:[]);
+    if(trials.length){ h+=`<div class="trial"><b class="h">🎯 אימוני ניסיון (${trials.length})</b>`;
+      trials.forEach((t,i)=>{ h+=`<div style="${i?'margin-top:8px;padding-top:8px;border-top:1px solid rgba(109,179,242,.2)':''}">`;
+        if(t.name) h+=`<div><b>מי:</b> ${esc(t.name)}</div>`;
+        if(t.how) h+=`<div><b>איך היה:</b> ${esc(t.how)}</div>`;
+        if(t.next) h+=`<div><b>להעביר הלאה:</b> ${esc(t.next)}</div>`;
+        h+=`</div>`; });
+      h+=`</div>`; }
   }
   const rows=[['מעורבות',s.involve],['איכות',s.quality],['שיעורים',s.classes],['תחושה',s.feel]].filter(r=>r[1]);
   h+=rows.map(r=>`<div class="row"><b>${r[0]}:</b> ${esc(r[1])}</div>`).join('');
-  if(s.injury==='כן'&&s.injuryTxt) h+=`<div class="row"><b>פציעה:</b> ${esc(s.injuryTxt)}</div>`;
+  if(s.injury==='כן'){
+    const injs=Array.isArray(s.injuries)&&s.injuries.length?s.injuries:(s.injuryTxt?[s.injuryTxt]:[]);
+    injs.forEach(t=>h+=`<div class="row"><b>פציעה:</b> ${esc(t)}</div>`);
+  }
+  if(s.tech==='כן'&&s.techTxt) h+=`<div class="row"><b>בעיה טכנית:</b> ${esc(s.techTxt)}</div>`;
   if(s.attention) h+=`<div class="row"><b>למעקב:</b> ${esc(s.attention)}</div>`;
   if(s.pro) h+=`<div class="row"><b>מקצועי:</b> ${esc(s.pro)}</div>`;
   if(s.stars) h+=`<div class="row"><b>בלטו ⭐:</b> ${esc(s.stars)}</div>`;
@@ -1075,15 +1108,20 @@ async function viewStocktake(){
   h+=`<div class="card-list">`+invItems().map(([id,it])=>
     `<div class="inv-take" data-id="${id}">
       <div class="it-top"><span class="nm">${esc(it.name)}${it.unit?` <span style="color:var(--muted);font-weight:600;font-size:13px">(${esc(it.unit)})</span>`:''}</span></div>
-      <div class="stepper" style="gap:12px">
-        <label class="qm" style="flex:1;flex-direction:column;align-items:stretch;gap:4px;font-size:12.5px">כמה יש עכשיו
-          <input type="number" class="st-qty" value="${+it.qty||0}" min="0" inputmode="numeric" style="width:100%;text-align:center;font-size:18px;font-weight:800"></label>
-        <label class="qm" style="flex:1;flex-direction:column;align-items:stretch;gap:4px;font-size:12.5px">מינימום להזמנה
-          <input type="number" class="st-min" value="${+it.min||0}" min="0" inputmode="numeric" style="width:100%;text-align:center;font-size:18px;font-weight:800"></label>
+      <div class="stepper" style="gap:8px">
+        <span class="stp-lbl" style="flex:0 0 auto">כמה יש:</span>
+        <button type="button" class="stp" onclick="stepStock('${id}',-1)">−</button>
+        <input type="number" class="st-qty" value="${+it.qty||0}" min="0" inputmode="numeric" style="width:64px;text-align:center;font-size:20px;font-weight:800">
+        <button type="button" class="stp" onclick="stepStock('${id}',1)">＋</button>
+        <span style="flex:1"></span>
+        <label class="qm" style="flex:0 0 auto;font-size:12px">מינ׳ להזמנה
+          <input type="number" class="st-min" value="${+it.min||0}" min="0" inputmode="numeric" style="width:56px;text-align:center;font-weight:800"></label>
       </div></div>`).join('')+`</div>`;
   h+=`<button class="submit" onclick="saveStocktake(this)">שמירת ספירה ✅</button>`;
   V().innerHTML=h;
 }
+function stepStock(id,d){ const el=document.querySelector(`.inv-take[data-id="${id}"] .st-qty`);
+  if(el) el.value=Math.max(0,(+el.value||0)+d); }
 async function saveStocktake(btn){
   const changed=[], ops=[];
   [...V().querySelectorAll('.inv-take')].forEach(r=>{ const id=r.dataset.id, it=INV[id]||{};
@@ -1123,7 +1161,8 @@ async function viewDashboard(){
     <div class="kpi"><div class="v">${todaySubs}</div><div class="l">צ'קליסטים היום</div></div>
   </div>`;
   if(injuriesToday.length){ h+=`<div class="sec-title">⚠️ פציעות שדווחו היום</div><div class="card-list">`+
-    injuriesToday.map(x=>`<div class="rec"><div class="rtop"><span class="who">${esc(x.name)}</span><span class="chip evening">${esc(x.shift)}</span></div><div class="row">${esc(x.injuryTxt||'—')}</div></div>`).join('')+`</div>`; }
+    injuriesToday.map(x=>{ const injs=Array.isArray(x.injuries)&&x.injuries.length?x.injuries:(x.injuryTxt?[x.injuryTxt]:['—']);
+      return `<div class="rec"><div class="rtop"><span class="who">${esc(x.name)}</span><span class="chip evening">${esc(x.shift)}</span></div>${injs.map(t=>`<div class="row">${esc(t)}</div>`).join('')}</div>`; }).join('')+`</div>`; }
   if(orderNow.length||lowSoon.length){ h+=`<div class="sec-title">🛒 מלאי — מה להזמין</div><div class="card-list">`+
     [...orderNow,...lowSoon].map(r=>{ const cls=r.st==='order'?'out':'low';
       return `<div class="inv-row ${cls}"><span class="dot ${cls}"></span><span class="nm">${esc(r.name)}</span><span class="st ${cls}">${r.st==='order'?'להזמין':'מתקרב'} · ${r.qty}/${r.min}</span></div>`; }).join('')+`</div>`; }
