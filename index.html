@@ -1444,8 +1444,66 @@ function viewOffice(){
       <span><span class="lb">תפוסת / הזמנת משרד</span><br><span class="ds">מי תפס מתי · חפיפות · חוזר שבועי</span></span></button>
     <button class="action wide" onclick="viewOfficeLog()"><span class="ic">📝</span>
       <span><span class="lb">רישום פעילות</span><br><span class="ds">מה עשיתי — למעקב ודוח</span></span></button>
+    <button class="action wide" onclick="viewOfficeReport()"><span class="ic">📊</span>
+      <span><span class="lb">דוח חודשי</span><br><span class="ds">מי היה ומה עשה במשרד</span></span></button>
   </div>`;
   V().innerHTML=h;
+}
+let RPT_MONTH='';
+function curMonth(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+async function viewOfficeReport(){
+  loading();
+  const [pv,se]=await Promise.all([oGet('providers'),oGet('sessions')]);
+  PROVIDERS=pv||{}; O_SESSIONS=se||{};
+  if(!RPT_MONTH) RPT_MONTH=curMonth();
+  renderOfficeReport();
+}
+function renderOfficeReport(){
+  const sessions=Object.values(O_SESSIONS).filter(s=>String(s.date||'').startsWith(RPT_MONTH));
+  const agg={};
+  sessions.forEach(s=>{ const pid=s.provider_id||'?'; (agg[pid]=agg[pid]||{count:0,mins:0,byType:{}});
+    agg[pid].count++; agg[pid].mins+=Number(s.duration_minutes||0);
+    agg[pid].byType[s.service_type]=(agg[pid].byType[s.service_type]||0)+1; });
+  let h=vhead("דוח משרד 📊","מי היה ומה עשה — לפי חודש","viewOfficeReport()","viewOffice()");
+  h+=`<div class="datebar"><input type="month" id="rpt_month" value="${RPT_MONTH}" onchange="RPT_MONTH=this.value;renderOfficeReport()" style="flex:1"></div>`;
+  const rows=Object.entries(agg).sort((a,b)=>b[1].mins-a[1].mins);
+  if(!rows.length){ h+=`<div class="empty"><span class="e">📊</span>אין פעילות בחודש הזה</div>`; V().innerHTML=h; window.scrollTo(0,0); return; }
+  const totMins=rows.reduce((a,[,v])=>a+v.mins,0), totCount=rows.reduce((a,[,v])=>a+v.count,0);
+  h+=`<div class="kpis"><div class="kpi good"><div class="v">${rows.length}</div><div class="l">אנשים פעילים</div></div>
+    <div class="kpi"><div class="v">${totCount}</div><div class="l">פעילויות</div></div>
+    <div class="kpi"><div class="v">${(totMins/60).toFixed(1)}</div><div class="l">שעות סה״כ</div></div></div>`;
+  h+=`<div class="sec-title">לפי אדם (לחיצה = פירוט)</div>`;
+  h+=`<div class="card-list">`+rows.map(([pid,v])=>{ const p=PROVIDERS[pid]||{name:pid,color:'#888'};
+    const types=Object.entries(v.byType).map(([t,c])=>`${t} (${c})`).join(' · ');
+    return `<div class="rec" onclick="officeReportDetail('${pid}')" style="cursor:pointer;border-right:4px solid ${p.color||'#888'}">
+      <div class="rtop"><span class="who" style="color:${p.color}">${esc(p.name)}</span>
+        <span class="chip gray">${v.count} פעילויות</span><span class="chip done">${(v.mins/60).toFixed(1)} ש׳</span>
+        <span class="spacer"></span><span class="meta">פירוט ›</span></div>
+      <div class="row">${esc(types)}</div></div>`; }).join('')+`</div>`;
+  h+=`<button class="submit" style="margin-top:14px;background:var(--card2);color:var(--orange);border:1px solid var(--orange-dim)" onclick="exportOfficeCSV()">📄 ייצוא לאקסל (CSV)</button>`;
+  V().innerHTML=h; window.scrollTo(0,0);
+}
+function officeReportDetail(pid){
+  const p=PROVIDERS[pid]||{name:pid,color:'#888'};
+  const sessions=Object.entries(O_SESSIONS).map(([k,s])=>({k,...s})).filter(s=>s.provider_id===pid&&String(s.date||'').startsWith(RPT_MONTH))
+    .sort((a,b)=>String((b.date||'')+(b.start_time||'')).localeCompare(String((a.date||'')+(a.start_time||''))));
+  let h=vhead(esc(p.name)+" 📋","פירוט "+RPT_MONTH,null,"viewOfficeReport()");
+  h+=`<div class="card-list">`+sessions.map(s=>{ const col=TYPE_COLORS[s.service_type]||'#888';
+    return `<div class="rec"><div class="rtop"><span class="pill" style="background:${col}">${esc(s.service_type)}</span>
+      <span class="spacer"></span><span class="meta">${fmtDate(s.date)} ${esc(s.start_time||'')}</span></div>
+      <div class="row">${s.duration_minutes?`${s.duration_minutes} דק׳`:''}${s.client_name?` · עם ${esc(s.client_name)}`:''}${s.note?` · ${esc(s.note)}`:''}</div></div>`; }).join('')+`</div>`;
+  V().innerHTML=h; window.scrollTo(0,0);
+}
+function exportOfficeCSV(){
+  const sessions=Object.values(O_SESSIONS).filter(s=>String(s.date||'').startsWith(RPT_MONTH))
+    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+  const rows=[['שם','תאריך','שעה','משך (דק׳)','סוג','עם מי','הערה']];
+  sessions.forEach(s=>{ const p=PROVIDERS[s.provider_id]||{name:s.provider_id};
+    rows.push([p.name,s.date,s.start_time||'',s.duration_minutes||0,s.service_type||'',s.client_name||'',s.note||'']); });
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`דוח-משרד-${RPT_MONTH}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast('הורד ✓');
 }
 
 /* ---------- לוח המשרד ---------- */
