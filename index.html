@@ -198,6 +198,8 @@ textarea{min-height:80px;resize:vertical;line-height:1.5}
 .seen-btn{width:100%;margin-top:10px;background:var(--card2);color:var(--blue);border:1px solid rgba(109,179,242,.4);
   border-radius:11px;padding:11px;font-weight:800;font-size:14px;cursor:pointer}
 .seen-done{margin-top:10px;text-align:center;color:var(--green);font-weight:700;font-size:13.5px}
+.share-btn{width:100%;margin-top:10px;background:rgba(37,211,102,.14);color:#25d366;border:1px solid rgba(37,211,102,.45);
+  border-radius:11px;padding:11px;font-weight:800;font-size:14px;cursor:pointer}
 /* סרגל תאריכים בפיד */
 .datebar{display:flex;gap:8px;align-items:center;margin-bottom:14px}
 .datebar input{flex:1}
@@ -391,13 +393,14 @@ const ACTIONS = {
     'order-list':{ic:"🛒",lb:"מה להזמין",ds:"הגיע למינימום"},
     'payroll':{ic:"💰",lb:"שעון ושכר",ds:"שעות × תעריף"},
     'maint-summary':{ic:"📆",lb:"סיכום תחזוקה",ds:"יומי · שבועי · חודשי"},
+    'evals':{ic:"⭐",lb:"הערכות מאמנים",ds:"היסטוריה + ציונים"},
     'dashboard':{ic:"📊",lb:"דשבורד ניהולי",ds:"מבט על"},
     'admin':{ic:"⚙️",lb:"מסך ניהול",ds:"צוות · צ'קליסט · מלאי"},
   }
 };
 const ROLE_ACTIONS = {
   manager:{do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
-           view:['feed','review','inventory-status','stocktake','order-list','maint-summary','dashboard','payroll','admin']},
+           view:['feed','review','inventory-status','stocktake','order-list','maint-summary','evals','dashboard','payroll','admin']},
   coach:  {do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
            view:['feed','inventory-status']},
   sales:  {do:['sales-summary'], view:['feed','review','inventory-status']},
@@ -410,7 +413,7 @@ const ROUTE = {
   'sales-summary':viewSalesSummary, 'helper-checklist':viewHelper,
   'inventory':viewInventoryReport, 'feed':viewFeed, 'review':viewReview,
   'inventory-status':viewInventoryStatus, 'stocktake':viewStocktake, 'order-list':viewOrderList,
-  'payroll':viewPayroll, 'maint-summary':viewMaintSummary, 'dashboard':viewDashboard, 'admin':viewAdmin,
+  'payroll':viewPayroll, 'maint-summary':viewMaintSummary, 'evals':viewEvals, 'dashboard':viewDashboard, 'admin':viewAdmin,
 };
 const FREQ_LBL={daily:'יומי ☀️',weekly:'שבועי 📆',monthly:'חודשי 🗓️'};
 
@@ -1016,11 +1019,87 @@ function shiftCard(s, feed){
   const seen=Array.isArray(s.seenBy)?s.seenBy:[];
   if(seen.length) h+=`<div class="row"><b>👁 ראו:</b> ${seen.map(esc).join(', ')}</div>`;
   if(feed){
+    h+=`<button class="share-btn" onclick="shareShift('${s.id}')">📲 שיתוף בוואטסאפ</button>`;
     if(seen.includes(ME.name)) h+=`<div class="seen-done">✓ ראית את הסיכום הזה</div>`;
     else if(s.name!==ME.name) h+=`<button class="seen-btn" onclick="ackSeen('${s.id}')">👁 סמן שראיתי</button>`;
   }
   h+=`</div>`; return h;
 }
+/* בניית טקסט סיכום + שיתוף לוואטסאפ */
+function shiftText(s){
+  const L=[`📋 *סיכום משמרת · קרוספיט באקס*`, `${s.name||''} · ${s.shift||''} · ${fmtDate(s.date)}`];
+  const meta=[]; if(s.involve)meta.push(`מעורבות: ${s.involve}`); if(s.quality)meta.push(`איכות: ${s.quality}`);
+  if(s.classes)meta.push(`שיעורים: ${s.classes}`); if(s.feel)meta.push(`תחושה: ${s.feel}`);
+  if(meta.length) L.push(meta.join(' · '));
+  if(s.handoff) L.push(`\n➡️ *חשוב להעביר הלאה:*\n${s.handoff}`);
+  const trials=Array.isArray(s.trials)?s.trials:((s.trialName||s.trialHow||s.trialNext)?[{name:s.trialName,how:s.trialHow,next:s.trialNext}]:[]);
+  if(s.trial==='כן'&&trials.length){ L.push(`\n🎯 *אימוני ניסיון:*`); trials.forEach(t=>L.push(`• ${[t.name,t.how,t.next].filter(Boolean).join(' — ')}`)); }
+  const injs=Array.isArray(s.injuries)&&s.injuries.length?s.injuries:(s.injuryTxt?[s.injuryTxt]:[]);
+  if(s.injury==='כן'&&injs.length){ L.push(`\n⚠️ *פציעות:*`); injs.forEach(t=>L.push(`• ${t}`)); }
+  if(s.tech==='כן'&&s.techTxt) L.push(`\n🔧 בעיה טכנית: ${s.techTxt}`);
+  if(s.attention) L.push(`\n👀 למעקב: ${s.attention}`);
+  if(s.pro) L.push(`📌 מקצועי: ${s.pro}`);
+  if(s.stars) L.push(`⭐ בלטו לטובה: ${s.stars}`);
+  return L.join('\n');
+}
+function shareShift(id){ const s=(FEED_ITEMS||[]).find(x=>x.id===id); if(!s) return;
+  window.open('https://wa.me/?text='+encodeURIComponent(shiftText(s)),'_blank'); }
+
+/* ============================================================
+   הערכות מאמנים — היסטוריה + ציונים + שיתוף
+   ============================================================ */
+let EVAL_FILTER='';
+async function viewEvals(){
+  loading();
+  const ev=await cGet('coach_evaluations')||{};
+  window._EVALS=Object.entries(ev).map(([id,e])=>({id,...e})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  renderEvals();
+}
+function renderEvals(){
+  const all=window._EVALS||[];
+  const coaches=[...new Set(all.map(e=>e.ratee).filter(Boolean))];
+  const list=EVAL_FILTER?all.filter(e=>e.ratee===EVAL_FILTER):all;
+  let h=vhead("הערכות מאמנים ⭐","היסטוריה + ציונים למעקב התקדמות","viewEvals()");
+  h+=`<div class="datebar"><select onchange="EVAL_FILTER=this.value;renderEvals()" style="flex:1">
+    <option value="">כל המאמנים (${all.length})</option>`+coaches.map(c=>`<option value="${esc(c)}"${c===EVAL_FILTER?' selected':''}>${esc(c)}</option>`).join('')+`</select></div>`;
+  if(!list.length){ h+=`<div class="empty"><span class="e">⭐</span>אין הערכות${EVAL_FILTER?' למאמן/ת הזה':' עדיין'}</div>`; V().innerHTML=h; return; }
+  if(EVAL_FILTER&&list.length>1){ const scores=list.slice().reverse().map(e=>(e.weighted||0).toFixed(1));
+    h+=`<div class="rec"><div class="row"><b>📈 מגמת ציונים (ישן→חדש):</b> ${scores.join(' → ')}</div></div>`; }
+  h+=`<div class="card-list">`+list.map(e=>evalCard(e)).join('')+`</div>`;
+  V().innerHTML=h;
+}
+function evalCard(e){
+  const pass=e.soloOk;
+  let h=`<div class="rec"><div class="rtop"><span class="who">${esc(e.ratee)}</span>
+    <span class="chip ${pass?'done':'pending'}">${(e.weighted||0).toFixed(2)} / 4</span>
+    ${e.safety==='כן'?'<span class="chip injury">בטיחות ⚠️</span>':''}
+    <span class="spacer"></span><span class="meta">${esc(e.rater)} · ${fmtDate(e.date)}</span></div>`;
+  h+=`<div class="row"><b>מסקנה:</b> ${pass?'רשאי/ת להעביר לבד ✅':'עדיין בחפיפה ⛔'}</div>`;
+  if(e.ctx) h+=`<div class="row"><b>הקשר:</b> ${esc(e.ctx)}</div>`;
+  if(e.wod) h+=`<div class="row"><b>אימון:</b> ${esc(e.wod)}</div>`;
+  if(e.scores){ const rb=RUBRIC.map(r=>`${esc(r.t)}: ${e.scores[r.k]||'-'}`).join(' · '); h+=`<div class="row"><b>ציונים:</b> ${rb}</div>`; }
+  if(e.hier) h+=`<div class="row"><b>היררכיה:</b> ${esc(e.hier)}</div>`;
+  if(e.strong) h+=`<div class="row"><b>חוזקות:</b> ${esc(e.strong)}</div>`;
+  if(e.improve) h+=`<div class="row"><b>לשיפור:</b> ${esc(e.improve)}</div>`;
+  if(e.talk) h+=`<div class="row"><b>סיכום שיחה:</b> ${esc(e.talk)}</div>`;
+  if(e.goal) h+=`<div class="handoff"><b>🎯 יעד להמשך</b>${esc(e.goal)}</div>`;
+  if(e.rec) h+=`<div class="row"><b>המלצה:</b> ${esc(e.rec)}</div>`;
+  if(e.followup) h+=`<div class="row"><b>תאריך מעקב:</b> ${fmtDate(e.followup)}</div>`;
+  h+=`<button class="share-btn" onclick="shareEval('${e.id}')">📲 שיתוף בוואטסאפ</button></div>`;
+  return h;
+}
+function evalText(e){
+  const L=[`⭐ *הערכת מאמן · קרוספיט באקס*`, `${e.ratee||''} · מעריך/ה: ${e.rater||''} · ${fmtDate(e.date)}`,
+    `ציון משוקלל: ${(e.weighted||0).toFixed(2)}/4 — ${e.soloOk?'רשאי/ת להעביר לבד ✅':'עדיין בחפיפה ⛔'}`];
+  if(e.safety==='כן') L.push(`⚠️ דגל בטיחות`);
+  if(e.strong) L.push(`\n💪 חוזקות: ${e.strong}`);
+  if(e.improve) L.push(`📈 לשיפור: ${e.improve}`);
+  if(e.goal) L.push(`🎯 יעד: ${e.goal}`);
+  if(e.rec) L.push(`📌 המלצה: ${e.rec}`);
+  return L.join('\n');
+}
+function shareEval(id){ const e=(window._EVALS||[]).find(x=>x.id===id); if(!e) return;
+  window.open('https://wa.me/?text='+encodeURIComponent(evalText(e)),'_blank'); }
 function salesCard(s){
   let h=`<div class="rec"><div class="rtop"><span class="who">${esc(s.name)}</span>
     <span class="chip gray">שירות/מכירה 🧡</span><span class="spacer"></span><span class="meta">${fmtDate(s.date)}</span></div>`;
