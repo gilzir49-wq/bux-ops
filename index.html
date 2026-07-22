@@ -219,6 +219,35 @@ textarea{min-height:80px;resize:vertical;line-height:1.5}
 .inv-row .st{font-size:12.5px;font-weight:800}
 .inv-row .st.ok{color:var(--green)} .inv-row .st.low{color:var(--yellow)} .inv-row .st.out{color:var(--red)}
 .inv-row .st.na{color:var(--muted)}
+.inv-row .restock{margin-inline-start:8px;background:var(--card2);border:1px solid var(--line);color:var(--green);
+  border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:800;cursor:pointer;flex:0 0 auto}
+
+/* ===== שעון עבודה ===== */
+.clock{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;margin-bottom:18px;text-align:center}
+.clock.on{border-color:var(--green);background:linear-gradient(160deg,rgba(63,185,80,.12),var(--card))}
+.clk-state{font-size:13.5px;color:var(--muted);font-weight:700;margin-bottom:8px}
+.clock.on .clk-state{color:var(--green)}
+.clk-time{font-size:40px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;letter-spacing:1px;margin-bottom:12px}
+.clk-btn{width:100%;border:none;border-radius:13px;padding:15px;font-size:17px;font-weight:800;cursor:pointer}
+.clk-btn.start{background:var(--green);color:#0d2a12}
+.clk-btn.stop{background:var(--red);color:#3a0e0e}
+
+/* ===== מדרגות כמות (עדכון מלאי) ===== */
+.inv-take{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+.inv-take.order{border-color:rgba(242,109,109,.5);background:rgba(242,109,109,.06)}
+.inv-take.low{border-color:rgba(241,201,59,.4)}
+.inv-take .it-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.inv-take .nm{font-weight:800;font-size:15px;flex:1}
+.inv-take .left{font-size:13px;font-weight:800}
+.stepper{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.stepper .stp-lbl{font-size:13px;color:var(--muted);font-weight:600;flex:1}
+.stepper .stp{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card2);
+  color:var(--orange);font-size:24px;font-weight:800;cursor:pointer;flex:0 0 auto}
+.stepper .take{width:60px;text-align:center;font-size:20px;font-weight:800;padding:10px 4px;flex:0 0 auto}
+.copy-box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:15px;
+  font-weight:600;line-height:1.9;margin-bottom:12px}
+.adm-row .qm{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);flex:0 0 auto}
+.adm-row .qm input{width:56px;text-align:center}
 
 /* דשבורד */
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
@@ -329,7 +358,7 @@ const FALLBACK_STAFF = {
   s6:{name:"טל",role:"coach",pin:"3333",active:true,order:6},
   s7:{name:"טלי",role:"coach",pin:"4444",active:true,order:7},
   s8:{name:"קורן",role:"coach",pin:"5555",active:true,order:8},
-  s9:{name:"אריאל",role:"helper",pin:"6666",active:true,order:9},
+  s9:{name:"אריאל",role:"helper",pin:"6666",active:true,order:9,rate:30},
 };
 const ROLES = {
   manager:{he:"ניהול",color:"#fdab3d"}, coach:{he:"מאמן/ת",color:"#3fb950"},
@@ -346,24 +375,26 @@ const ACTIONS = {
     'shift-summary':  {ic:"📋",lb:"סיכום משמרת",ds:"הלב של המשמרת",primary:true},
     'coach-eval':     {ic:"⭐",lb:"הערכת מאמן",ds:"מבוסס L2"},
     'sales-summary':  {ic:"🧡",lb:"סיכום שירות/מכירה",ds:"סיכום היום",primary:true},
-    'helper-checklist':{ic:"🧹",lb:"צ'קליסט נער עזר",ds:"תחזוקה + מלאי",primary:true},
-    'inventory':      {ic:"📦",lb:"דיווח מלאי",ds:"מה חסר?"},
+    'helper-checklist':{ic:"🧹",lb:"צ'קליסט נער עזר",ds:"תחזוקה + משימות",primary:true},
+    'inventory':      {ic:"📦",lb:"עדכון מלאי",ds:"מה לקחת?"},
   },
   view:{
     'feed':{ic:"🗂️",lb:"פיד סיכומים",ds:"מה קרה במשמרות"},
     'review':{ic:"🔎",lb:"תור בקרה",ds:"לעדכן בארבוקס"},
-    'inventory-status':{ic:"🚦",lb:"מצב מלאי",ds:"מה תקין / חסר"},
+    'inventory-status':{ic:"🚦",lb:"מצב מלאי",ds:"כמות מול מינימום"},
+    'order-list':{ic:"🛒",lb:"מה להזמין",ds:"הגיע למינימום"},
+    'payroll':{ic:"💰",lb:"שעון ושכר",ds:"שעות × תעריף"},
     'dashboard':{ic:"📊",lb:"דשבורד ניהולי",ds:"מבט על"},
     'admin':{ic:"⚙️",lb:"מסך ניהול",ds:"צוות · צ'קליסט · מלאי"},
   }
 };
 const ROLE_ACTIONS = {
   manager:{do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
-           view:['feed','review','inventory-status','dashboard','admin']},
+           view:['feed','review','inventory-status','order-list','dashboard','payroll','admin']},
   coach:  {do:['checklist-open','checklist-close','shift-summary','coach-eval','inventory'],
            view:['feed','inventory-status']},
   sales:  {do:['sales-summary'], view:['feed','review','inventory-status']},
-  helper: {do:['helper-checklist'], view:['inventory-status']},
+  helper: {do:['helper-checklist','inventory'], view:['inventory-status','payroll']},
 };
 const ROUTE = {
   'checklist-open':()=>viewChecklist('open'),
@@ -371,7 +402,8 @@ const ROUTE = {
   'shift-summary':viewShiftSummary, 'coach-eval':viewCoachEval,
   'sales-summary':viewSalesSummary, 'helper-checklist':viewHelper,
   'inventory':viewInventoryReport, 'feed':viewFeed, 'review':viewReview,
-  'inventory-status':viewInventoryStatus, 'dashboard':viewDashboard, 'admin':viewAdmin,
+  'inventory-status':viewInventoryStatus, 'order-list':viewOrderList,
+  'payroll':viewPayroll, 'dashboard':viewDashboard, 'admin':viewAdmin,
 };
 
 /* ============================================================
@@ -379,6 +411,8 @@ const ROUTE = {
    ============================================================ */
 let STAFF={}, CHECKS={}, INV={};   // config מהענן
 let ME=null, pinBuffer="", pendingStaffId=null;
+let ACTIVE_SHIFT=null;             // משמרת שעון פתוחה של המשתמש הנוכחי
+const isHourly = me => me && (+me.rate)>0;
 
 async function loadConfig(){
   const [st,ck,iv] = await Promise.all([cGet('staff'),cGet('checklist_items'),cGet('inventory_items')]);
@@ -438,7 +472,11 @@ function loginAs(id){
   document.getElementById('t-av').style.background=rc;
   document.getElementById('t-name').textContent=ME.name;
   document.getElementById('t-role').textContent=(ROLES[ME.role]||{}).he||ME.role;
+  ACTIVE_SHIFT=null;
   viewHome(); window.scrollTo(0,0);
+  // טעינת מצב שעון עבודה (לעובדים שעתיים) ורענון הווידג'ט
+  if(isHourly(ME)) cGet('time_active/'+ME.id).then(a=>{ ACTIVE_SHIFT=a||null;
+    const w=document.getElementById('clock-wrap'); if(w) w.innerHTML=renderClockWidget(); });
 }
 function logout(){ localStorage.removeItem('bux_ops_me');ME=null;
   document.getElementById('screen-app').classList.add('hidden');document.getElementById('screen-login').classList.remove('hidden');backToPick(); }
@@ -480,6 +518,7 @@ function viewHome(){
   let h=`<div class="shift-banner ${sh.k}"><span class="big">${sh.ic}</span>
     <span><b>${greet()}, ${esc(ME.name.split(' ')[0])}</b> · ${sh.t}<br>
     <span style="font-weight:500;opacity:.85">${sh.s}</span></span></div>`;
+  if(isHourly(ME)) h+=`<div id="clock-wrap">${renderClockWidget()}</div>`;
   if(conf.do.length){ h+=`<div class="sec-title">מה ממלאים היום ✍️</div><div class="actions">`+conf.do.map(k=>card(k,'do')).join('')+`</div>`; }
   if(conf.view.length){ h+=`<div class="sec-title">צפייה ומעקב 👀</div><div class="actions">`+conf.view.map(k=>card(k,'view',k==='admin')).join('')+`</div>`; }
   V().innerHTML=h;
@@ -492,6 +531,78 @@ async function refreshPendCount(){
   const el=document.querySelector(".action .cnt"); // רענון קל
   if(ME) { const btn=[...document.querySelectorAll('.action')].find(b=>b.getAttribute('onclick')==="go('review')");
     if(btn){ btn.querySelector('.cnt')?.remove(); if(window._pendCount){ const c=document.createElement('span');c.className='cnt';c.textContent=window._pendCount;btn.appendChild(c);} } }
+}
+
+/* ============================================================
+   שעון עבודה + שכר
+   ============================================================ */
+function hhmm(ts){ const d=new Date(ts); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function elapsedStr(ms){ const s=Math.max(0,Math.floor(ms/1000)); const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
+function hm(mins){ mins=Math.round(+mins||0); const h=Math.floor(mins/60),m=mins%60; return h?`${h}ש ${m}ד`:`${m} דק'`; }
+function money(mins,rate){ return Math.round((mins/60)*(+rate||0)); }
+function weekStartTs(){ const d=new Date(); d.setDate(d.getDate()-d.getDay()); d.setHours(0,0,0,0); return d.getTime(); } // ראשון
+function monthStartTs(){ const d=new Date(); return new Date(d.getFullYear(),d.getMonth(),1).getTime(); }
+
+function renderClockWidget(){
+  if(!isHourly(ME)) return '';
+  if(ACTIVE_SHIFT&&ACTIVE_SHIFT.start){
+    return `<div class="clock on">
+      <div class="clk-state">▶️ במשמרת · התחלת ב-${hhmm(ACTIVE_SHIFT.start)}</div>
+      <div class="clk-time" id="clock-elapsed">${elapsedStr(Date.now()-ACTIVE_SHIFT.start)}</div>
+      <button class="clk-btn stop" onclick="clockOut(this)">⏹️ סיום משמרת</button></div>`;
+  }
+  return `<div class="clock"><div class="clk-state">🕒 שעון עבודה</div>
+    <button class="clk-btn start" onclick="clockIn(this)">▶️ התחל משמרת</button></div>`;
+}
+async function clockIn(btn){
+  const rec={start:Date.now(),date:todayISO()};
+  const ok=await withBusy(btn,()=>cPut('time_active/'+ME.id,rec));
+  if(ok){ ACTIVE_SHIFT=rec; const w=document.getElementById('clock-wrap'); if(w)w.innerHTML=renderClockWidget(); toast('▶️ משמרת התחילה — בהצלחה!'); }
+}
+async function clockOut(btn){
+  if(!ACTIVE_SHIFT||!ACTIVE_SHIFT.start) return;
+  const start=ACTIVE_SHIFT.start, end=Date.now(), minutes=Math.max(1,Math.round((end-start)/60000)), date=ACTIVE_SHIFT.date||todayISO();
+  const iv=await cGet('inventory_items')||INV; INV=iv||INV;
+  const orders=Object.values(iv||{}).filter(it=>it&&it.active&&invStatus(it.qty,it.min)==='order').map(it=>it.name);
+  const ok=await withBusy(btn,()=>Promise.all([
+    cPush('time_shifts',{staffId:ME.id,name:ME.name,start,end,minutes,date,ts:end}),
+    cPush('helper_reports',{staffId:ME.id,name:ME.name,date,minutes,orders,ts:end}),
+    cDel('time_active/'+ME.id)
+  ]));
+  if(ok){ ACTIVE_SHIFT=null; const w=document.getElementById('clock-wrap'); if(w)w.innerHTML=renderClockWidget();
+    let body=`עבדת <b>${hm(minutes)}</b> 💪 · שכר: ₪${money(minutes,ME.rate)}<br>`;
+    body+= orders.length? `<br>🛒 סיכום למנהל — צריך להזמין:<br><b>${orders.map(esc).join(' · ')}</b>` : '<br>מלאי מלא — אין מה להזמין ✅';
+    sheet('סיום משמרת ✅', body, 'סיימתי 🧡', viewHome);
+  }
+}
+async function viewPayroll(){
+  loading();
+  const shifts=await cGet('time_shifts')||{};
+  const all=Object.values(shifts), isMgr=ME.role==='manager';
+  const t=todayISO(), ws=weekStartTs(), ms=monthStartTs();
+  let h=vhead("שעון ושכר 💰","שעות עבודה × תעריף לשעה","viewPayroll()");
+  const targets = isMgr ? Object.entries(STAFF).filter(([id,s])=>(+s.rate)>0).sort((a,b)=>(a[1].order||99)-(b[1].order||99)).map(([id])=>id) : [ME.id];
+  if(!targets.length){ h+=`<div class="empty"><span class="e">💰</span>אין עובדים שעתיים מוגדרים</div>`; V().innerHTML=h; return; }
+  targets.forEach(id=>{
+    const s=STAFF[id]||{}, r=+s.rate||0;
+    const mine=all.filter(x=>x.staffId===id);
+    const sum=pred=>mine.filter(pred).reduce((a,x)=>a+(+x.minutes||0),0);
+    const dToday=sum(x=>x.date===t), dWeek=sum(x=>(x.ts||x.end||0)>=ws), dMonth=sum(x=>(x.ts||x.end||0)>=ms);
+    if(isMgr) h+=`<div class="sec-title">${esc(s.name)} · ₪${r}/שעה</div>`;
+    h+=`<div class="kpis">
+      <div class="kpi"><div class="v">${hm(dToday)}</div><div class="l">היום</div></div>
+      <div class="kpi"><div class="v">${hm(dWeek)}</div><div class="l">השבוע</div></div>
+      <div class="kpi good"><div class="v">${hm(dMonth)}</div><div class="l">החודש</div></div>
+      <div class="kpi"><div class="v">₪${money(dMonth,r)}</div><div class="l">שכר החודש</div></div></div>`;
+    if(!isMgr){
+      const recent=mine.sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,12);
+      if(recent.length){ h+=`<div class="sec-title">משמרות אחרונות</div><div class="card-list">`+
+        recent.map(x=>`<div class="inv-row"><span class="nm">${fmtDate(x.date)}</span>
+          <span class="st ok">${hhmm(x.start)}–${hhmm(x.end)} · ${hm(x.minutes)}</span></div>`).join('')+`</div>`; }
+    }
+  });
+  V().innerHTML=h;
 }
 
 /* ---------- רכיבי טופס ---------- */
@@ -670,27 +781,47 @@ async function submitEval(btn){
 }
 
 /* ============================================================
-   7.5 דיווח מלאי
+   מלאי כמותי — לכל פריט כמות + מינימום; לקיחה מורידה מהכמות
    ============================================================ */
 function invItems(){ return Object.entries(INV).filter(([id,i])=>i.active).sort((a,b)=>(a[1].order||99)-(b[1].order||99)); }
+function invStatus(qty,min){ qty=+qty||0; min=+min||0; if(qty<=min) return 'order'; if(qty<=min*2) return 'low'; return 'ok'; }
+const INV_LBL={ok:'תקין',low:'עומד להיגמר',order:'צריך להזמין'};
+
 function viewInventoryReport(){
-  let h=vhead("דיווח מלאי 📦","מה תקין, מה עומד להיגמר, מה נגמר");
-  h+=`<div class="check-list">`+invItems().map(([id,it])=>
-    `<div class="rubric" data-id="${id}"><div class="rt">${esc(it.name)}</div>
-     <div class="seg" data-group="inv-${id}">
-       <button type="button" class="seg-b sel" data-val="ok" onclick="segPick(this,'inv-${id}')">תקין</button>
-       <button type="button" class="seg-b" data-val="low" onclick="segPick(this,'inv-${id}')">עומד להיגמר</button>
-       <button type="button" class="seg-b" data-val="out" onclick="segPick(this,'inv-${id}')">נגמר</button>
-     </div></div>`).join('')+`</div>`;
-  h+=`<div class="field" style="margin-top:14px"><label>הערות</label><textarea id="invNote" placeholder="פרטים על מה שחסר…"></textarea></div>`;
-  h+=`<button class="submit" onclick="submitInv(this)">שליחת דיווח ✅</button>`;
+  let h=vhead("עדכון מלאי 📦","סמן/י כמה לקחת — הכמות תרד ותתעדכן לכולם");
+  h+=`<div class="hint" style="margin-bottom:12px">ליד כל פריט רשום כמה נשאר. אם לקחת — עדכן/י כמה לקחת עם ➖/➕.</div>`;
+  h+=`<div class="card-list">`+invItems().map(([id,it])=>{
+    const qty=+it.qty||0, st=invStatus(qty,it.min);
+    return `<div class="inv-take ${st}" data-id="${id}">
+      <div class="it-top"><span class="nm">${esc(it.name)}</span><span class="left st ${st==='order'?'out':st}">נשאר: ${qty}</span></div>
+      <div class="stepper"><span class="stp-lbl">כמה לקחת?</span>
+        <button type="button" class="stp" onclick="stepTake('${id}',-1)">−</button>
+        <input type="number" class="take" id="take-${id}" value="0" min="0" max="${qty}" inputmode="numeric" readonly>
+        <button type="button" class="stp" onclick="stepTake('${id}',1)">＋</button></div></div>`;
+  }).join('')+`</div>`;
+  h+=`<div class="field" style="margin-top:14px"><label>הערות</label><textarea id="invNote" placeholder="למשל: שברתי בקבוק, פתחתי חבילה חדשה…"></textarea></div>`;
+  h+=`<button class="submit" onclick="submitInv(this)">עדכון מלאי ✅</button>`;
   V().innerHTML=h;
 }
+function stepTake(id,d){ const el=document.getElementById('take-'+id); const max=+el.max||0;
+  el.value=Math.max(0,Math.min(max,(+el.value||0)+d));
+  el.closest('.inv-take').style.borderColor = (+el.value>0)?'var(--orange)':''; }
 async function submitInv(btn){
-  const items={}; invItems().forEach(([id])=>{ items[id]=segVal('inv-'+id)||'ok'; });
-  const ok=await withBusy(btn,()=>cPush('inventory_reports',{staffId:ME.id,name:ME.name,date:todayISO(),time:nowTime(),items,
-    note:document.getElementById('invNote').value.trim(),ts:Date.now()}));
-  if(ok) sheet('דיווח נשלח! ✅','"מצב מלאי נוכחי" התעדכן לכולם.','חזרה לבית',viewHome);
+  const changes=[];
+  invItems().forEach(([id,it])=>{ const taken=+document.getElementById('take-'+id).value||0;
+    if(taken>0) changes.push({id,name:it.name,taken,newQty:Math.max(0,(+it.qty||0)-taken)}); });
+  if(!changes.length) return toast('לא סימנת שלקחת משהו');
+  const note=document.getElementById('invNote').value.trim();
+  const ok=await withBusy(btn,()=>Promise.all([
+    ...changes.map(c=>cPatch('inventory_items/'+c.id,{qty:c.newQty})),
+    cPush('inventory_txns',{staffId:ME.id,name:ME.name,type:'take',date:todayISO(),time:nowTime(),
+      items:changes.map(c=>({id:c.id,name:c.name,taken:c.taken,left:c.newQty})),note,ts:Date.now()})
+  ]));
+  if(ok){ changes.forEach(c=>{ if(INV[c.id]) INV[c.id].qty=c.newQty; });
+    const orders=invItems().filter(([id,it])=>invStatus(it.qty,it.min)==='order').map(([id,it])=>it.name);
+    sheet('מלאי עודכן ✅', changes.map(c=>`${esc(c.name)}: נשאר ${c.newQty}`).join('<br>')+
+      (orders.length?`<br><br>🛒 צריך להזמין: <b>${orders.map(esc).join(' · ')}</b>`:''),'חזרה לבית',viewHome);
+  }
 }
 
 /* ============================================================
@@ -698,32 +829,21 @@ async function submitInv(btn){
    ============================================================ */
 function viewHelper(){
   const items=checklistItems('maint');
-  let h=vhead("צ'קליסט נער עזר 🧹","תחזוקה + מלאי + משימות היום");
-  h+=`<div class="sec-title">משימות תחזוקה</div>`;
+  let h=vhead("צ'קליסט נער עזר 🧹","תחזוקה + משימות היום");
   h+=`<div class="check-progress" id="cprog">0 / ${items.length} סומנו</div>`;
   h+=`<div class="check-list">`+items.map(([id,c])=>
     `<div class="check" data-id="${id}" onclick="toggleCheck(this)"><div class="box">✓</div>
       <div><div class="txt">${esc(c.text)}</div>${c.help?`<div class="help">${esc(c.help)}</div>`:''}</div></div>`).join('')+`</div>`;
-  h+=`<div class="sec-title">מלאי — מה חסר?</div>`;
-  h+=`<div class="check-list">`+invItems().map(([id,it])=>
-    `<div class="rubric" data-id="${id}"><div class="rt">${esc(it.name)}</div>
-     <div class="seg" data-group="inv-${id}">
-       <button type="button" class="seg-b sel" data-val="ok" onclick="segPick(this,'inv-${id}')">תקין</button>
-       <button type="button" class="seg-b" data-val="low" onclick="segPick(this,'inv-${id}')">עומד להיגמר</button>
-       <button type="button" class="seg-b" data-val="out" onclick="segPick(this,'inv-${id}')">נגמר</button>
-     </div></div>`).join('')+`</div>`;
   h+=`<div class="field" style="margin-top:14px"><label>משימות היום / הערות</label><textarea id="helperTasks" placeholder="מה עשית / מה נשאר…"></textarea></div>`;
+  h+=`<div class="hint" style="margin-bottom:12px">📦 לקחת מלאי? עדכן/י ב"עדכון מלאי" מהבית.</div>`;
   h+=`<button class="submit" onclick="submitHelper(this)">שליחה ✅</button>`;
   V().innerHTML=h;
 }
 async function submitHelper(btn){
   const checked=[...V().querySelectorAll('.check.on')].map(e=>e.dataset.id);
-  const items={}; invItems().forEach(([id])=>{ items[id]=segVal('inv-'+id)||'ok'; });
   const note=document.getElementById('helperTasks').value.trim();
-  const ok=await withBusy(btn,()=>Promise.all([
-    cPush('checklist_submissions',{staffId:ME.id,name:ME.name,type:'maint',shift:'—',date:todayISO(),time:nowTime(),checked,total:V().querySelectorAll('.check').length,note,ts:Date.now()}),
-    cPush('inventory_reports',{staffId:ME.id,name:ME.name,date:todayISO(),time:nowTime(),items,note,ts:Date.now()})
-  ]));
+  const ok=await withBusy(btn,()=>cPush('checklist_submissions',{staffId:ME.id,name:ME.name,type:'maint',shift:'—',
+    date:todayISO(),time:nowTime(),checked,total:V().querySelectorAll('.check').length,note,ts:Date.now()}));
   if(ok) sheet('נשלח! ✅',`כל הכבוד ${esc(ME.name.split(' ')[0])} 🧡`,'חזרה לבית',viewHome);
 }
 
@@ -837,52 +957,83 @@ async function markDone(id){
    ============================================================ */
 async function viewInventoryStatus(){
   loading();
-  const reports=await cGet('inventory_reports')||{};
-  const list=Object.values(reports).sort((a,b)=>(b.ts||0)-(a.ts||0));
-  const current={}; // itemId -> {status,date,name}
-  list.forEach(r=>{ if(r.items) Object.entries(r.items).forEach(([iid,st])=>{ if(!current[iid]) current[iid]={status:st,by:r.name,date:r.date}; }); });
+  const iv=await cGet('inventory_items'); if(iv) INV=iv;
   const items=invItems();
-  const rank={out:0,low:1,ok:2,na:3};
-  const rows=items.map(([id,it])=>({id,name:it.name,...(current[id]||{status:'na'})}))
-    .sort((a,b)=>(rank[a.status]??3)-(rank[b.status]??3));
-  let h=vhead("מצב מלאי 🚦","נגזר מהדיווח האחרון · חוסר צף למעלה","viewInventoryStatus()");
-  const label={ok:'תקין',low:'עומד להיגמר',out:'נגמר',na:'אין דיווח'};
-  h+=`<div class="card-list">`+rows.map(r=>
-    `<div class="inv-row ${r.status}"><span class="dot ${r.status==='na'?'':r.status}"></span>
+  const rank={order:0,low:1,ok:2};
+  const rows=items.map(([id,it])=>({id,name:it.name,qty:+it.qty||0,min:+it.min||0,st:invStatus(it.qty,it.min)}))
+    .sort((a,b)=>rank[a.st]-rank[b.st]);
+  const isMgr=ME.role==='manager';
+  let h=vhead("מצב מלאי 🚦","כמות מול מינימום · חוסר צף למעלה","viewInventoryStatus()");
+  h+=`<div class="card-list">`+rows.map(r=>{ const cls=r.st==='order'?'out':r.st;
+    return `<div class="inv-row ${cls}"><span class="dot ${cls}"></span>
       <span class="nm">${esc(r.name)}</span>
-      <span class="st ${r.status}">${label[r.status]}${r.date&&r.status!=='na'?` · ${fmtDate(r.date)}`:''}</span></div>`).join('')+`</div>`;
+      <span class="st ${cls}">${INV_LBL[r.st]} · ${r.qty}/${r.min}</span>
+      ${isMgr?`<button class="restock" onclick="restock('${r.id}')">＋ קיבלתי</button>`:''}</div>`; }).join('')+`</div>`;
   V().innerHTML=h;
 }
+async function restock(id){
+  const it=INV[id]; if(!it) return;
+  const add=prompt(`כמה יחידות של "${it.name}" קיבלת? (נשאר כרגע: ${+it.qty||0})`,'');
+  const n=parseInt(add,10); if(!(n>0)) return;
+  const newQty=(+it.qty||0)+n;
+  try{ await cPatch('inventory_items/'+id,{qty:newQty}); INV[id].qty=newQty;
+    await cPush('inventory_txns',{staffId:ME.id,name:ME.name,type:'restock',date:todayISO(),time:nowTime(),items:[{id,name:it.name,added:n,left:newQty}],ts:Date.now()});
+    toast('עודכן ✓ · נשאר '+newQty); viewInventoryStatus();
+  }catch(e){ toast('❌ אין חיבור'); }
+}
+async function viewOrderList(){
+  loading();
+  const iv=await cGet('inventory_items'); if(iv) INV=iv;
+  const need=invItems().map(([id,it])=>({name:it.name,qty:+it.qty||0,min:+it.min||0,st:invStatus(it.qty,it.min)}))
+    .filter(r=>r.st!=='ok').sort((a,b)=>(a.st==='order'?0:1)-(b.st==='order'?0:1));
+  let h=vhead("מה להזמין 🛒","פריטים שהגיעו/מתקרבים למינימום","viewOrderList()");
+  if(!need.length){ h+=`<div class="empty"><span class="e">✅</span>הכל מלא — אין מה להזמין</div>`; V().innerHTML=h; return; }
+  h+=`<div class="card-list">`+need.map(r=>{ const cls=r.st==='order'?'out':'low';
+    return `<div class="inv-row ${cls}"><span class="dot ${cls}"></span><span class="nm">${esc(r.name)}</span>
+      <span class="st ${cls}">${r.st==='order'?'להזמין עכשיו':'מתקרב'} · נשאר ${r.qty} (מ׳ ${r.min})</span></div>`; }).join('')+`</div>`;
+  const orderNow=need.filter(r=>r.st==='order');
+  if(orderNow.length){ h+=`<div class="sec-title">רשימה להעתקה 📋</div>
+    <div class="copy-box" id="orderText">${orderNow.map(r=>'• '+esc(r.name)).join('<br>')}</div>
+    <button class="submit" onclick="copyOrder()">📋 העתקת רשימת הזמנה</button>`; }
+  V().innerHTML=h;
+}
+function copyOrder(){ const txt=(document.getElementById('orderText')||{}).innerText||'';
+  if(navigator.clipboard&&txt){ navigator.clipboard.writeText(txt).then(()=>toast('הועתק ✓')).catch(()=>toast('לא ניתן להעתיק')); } }
 
 /* ============================================================
    דשבורד ניהולי
    ============================================================ */
 async function viewDashboard(){
   loading();
-  const [shifts,sales,reports,evals,subs]=await Promise.all([
-    cGet('shift_summaries'),cGet('sales_summaries'),cGet('inventory_reports'),cGet('coach_evaluations'),cGet('checklist_submissions')]);
-  const today=todayISO();
+  const [shifts,evals,subs,iv,times]=await Promise.all([
+    cGet('shift_summaries'),cGet('coach_evaluations'),cGet('checklist_submissions'),cGet('inventory_items'),cGet('time_shifts')]);
+  if(iv) INV=iv;
+  const today=todayISO(), ms=monthStartTs();
   const sh=Object.values(shifts||{}), pend=sh.filter(x=>x.status==='pending').length;
   const injuriesToday=sh.filter(x=>x.date===today&&x.injury==='כן');
   const todaySubs=Object.values(subs||{}).filter(x=>x.date===today).length;
-  // מלאי חסר
-  const rep=Object.values(reports||{}).sort((a,b)=>(b.ts||0)-(a.ts||0)); const cur={};
-  rep.forEach(r=>{ if(r.items)Object.entries(r.items).forEach(([iid,st])=>{ if(!(iid in cur))cur[iid]=st; }); });
-  const invAlerts=Object.entries(cur).filter(([iid,st])=>st==='out'||st==='low');
-  const outCount=Object.values(cur).filter(s=>s==='out').length;
+  // מלאי — לפי כמות מול מינימום
+  const invRows=invItems().map(([id,it])=>({name:it.name,qty:+it.qty||0,min:+it.min||0,st:invStatus(it.qty,it.min)}));
+  const orderNow=invRows.filter(r=>r.st==='order'), lowSoon=invRows.filter(r=>r.st==='low');
+  // שעות עובדים שעתיים החודש
+  const hourly=Object.entries(STAFF).filter(([id,s])=>(+s.rate)>0);
+  const tShifts=Object.values(times||{});
   const evList=Object.values(evals||{}).sort((a,b)=>(b.ts||0)-(a.ts||0));
   let h=vhead("דשבורד ניהולי 📊","מבט על — היום","viewDashboard()");
   h+=`<div class="kpis">
     <div class="kpi ${pend?'alert':'good'}"><div class="v">${pend}</div><div class="l">ממתינים לבקרה</div></div>
     <div class="kpi ${injuriesToday.length?'alert':'good'}"><div class="v">${injuriesToday.length}</div><div class="l">פציעות היום</div></div>
-    <div class="kpi ${outCount?'alert':''}"><div class="v">${outCount}</div><div class="l">פריטים שנגמרו</div></div>
+    <div class="kpi ${orderNow.length?'alert':'good'}"><div class="v">${orderNow.length}</div><div class="l">צריך להזמין 🛒</div></div>
     <div class="kpi"><div class="v">${todaySubs}</div><div class="l">צ'קליסטים היום</div></div>
   </div>`;
   if(injuriesToday.length){ h+=`<div class="sec-title">⚠️ פציעות שדווחו היום</div><div class="card-list">`+
     injuriesToday.map(x=>`<div class="rec"><div class="rtop"><span class="who">${esc(x.name)}</span><span class="chip evening">${esc(x.shift)}</span></div><div class="row">${esc(x.injuryTxt||'—')}</div></div>`).join('')+`</div>`; }
-  if(invAlerts.length){ h+=`<div class="sec-title">📦 מלאי לתשומת לב</div><div class="card-list">`+
-    invAlerts.sort((a,b)=>(a[1]==='out'?0:1)-(b[1]==='out'?0:1)).map(([iid,st])=>{ const it=INV[iid]||{name:iid};
-      return `<div class="inv-row ${st}"><span class="dot ${st}"></span><span class="nm">${esc(it.name)}</span><span class="st ${st}">${st==='out'?'נגמר':'עומד להיגמר'}</span></div>`; }).join('')+`</div>`; }
+  if(orderNow.length||lowSoon.length){ h+=`<div class="sec-title">🛒 מלאי — מה להזמין</div><div class="card-list">`+
+    [...orderNow,...lowSoon].map(r=>{ const cls=r.st==='order'?'out':'low';
+      return `<div class="inv-row ${cls}"><span class="dot ${cls}"></span><span class="nm">${esc(r.name)}</span><span class="st ${cls}">${r.st==='order'?'להזמין':'מתקרב'} · ${r.qty}/${r.min}</span></div>`; }).join('')+`</div>`; }
+  if(hourly.length){ h+=`<div class="sec-title">⏱ שעות עובדים · החודש</div><div class="card-list">`+
+    hourly.map(([id,s])=>{ const mins=tShifts.filter(x=>x.staffId===id&&(x.ts||x.end||0)>=ms).reduce((a,x)=>a+(+x.minutes||0),0);
+      return `<div class="inv-row"><span class="nm">${esc(s.name)}</span><span class="st ok">${hm(mins)} · ₪${money(mins,s.rate)}</span></div>`; }).join('')+`</div>`; }
   h+=`<div class="sec-title">⭐ הערכות מאמנים אחרונות</div>`;
   if(!evList.length){ h+=`<div class="empty" style="padding:24px"><span class="e">⭐</span>עוד אין הערכות</div>`; }
   else{ h+=`<div class="card-list">`+evList.slice(0,6).map(e=>
@@ -913,11 +1064,14 @@ function viewAdmin(){
 function admStaff(){
   const list=Object.entries(STAFF).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
   const roleOpts=Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v.he}</option>`).join('');
-  let h=list.map(([id,s])=>`<div class="adm-row" data-id="${id}">
+  let h=`<div class="hint" style="margin-bottom:12px">₪/שעה = תעריף לעובד שעתי (0 = לא שעתי). מי שיש לו תעריף מקבל שעון עבודה + שכר.</div>`;
+  h+=list.map(([id,s])=>`<div class="adm-row" data-id="${id}">
     <div class="r1"><input type="text" class="f-name" value="${esc(s.name)}" placeholder="שם" style="flex:1">
-      <input type="text" class="f-pin" value="${esc(s.pin)}" placeholder="PIN" style="width:74px" inputmode="numeric" maxlength="4"></div>
+      <input type="text" class="f-pin" value="${esc(s.pin)}" placeholder="PIN" style="width:70px" inputmode="numeric" maxlength="4"></div>
     <div class="r1"><select class="f-role" style="flex:1">${roleOpts.replace(`value="${s.role}"`,`value="${s.role}" selected`)}</select>
-      <label class="toggle"><input type="checkbox" class="f-active" ${s.active?'checked':''}>פעיל</label>
+      <label class="qm">₪/ש<input type="number" class="f-rate" value="${+s.rate||0}" inputmode="numeric"></label>
+      <label class="toggle"><input type="checkbox" class="f-active" ${s.active?'checked':''}>פעיל</label></div>
+    <div class="r1"><span style="flex:1"></span>
       <button class="save" onclick="saveStaff('${id}')">שמור</button>
       <button class="del" onclick="delStaff('${id}')">מחק</button></div></div>`).join('');
   h+=`<button class="add-btn" onclick="addStaff()">＋ הוספת איש צוות</button>`;
@@ -926,12 +1080,13 @@ function admStaff(){
 async function saveStaff(id){
   const row=document.querySelector(`.adm-row[data-id="${id}"]`);
   const obj={name:row.querySelector('.f-name').value.trim(),pin:row.querySelector('.f-pin').value.trim(),
-    role:row.querySelector('.f-role').value,active:row.querySelector('.f-active').checked,order:STAFF[id].order||99};
+    role:row.querySelector('.f-role').value,rate:+row.querySelector('.f-rate').value||0,
+    active:row.querySelector('.f-active').checked,order:STAFF[id].order||99};
   await cPut('staff/'+id,obj); STAFF[id]=obj; toast('נשמר ✓');
 }
 async function addStaff(){
   const id='s_'+Date.now(), order=Object.keys(STAFF).length+1;
-  const obj={name:'חדש',pin:'0000',role:'coach',active:true,order}; await cPut('staff/'+id,obj); STAFF[id]=obj; admStaff();
+  const obj={name:'חדש',pin:'0000',role:'coach',rate:0,active:true,order}; await cPut('staff/'+id,obj); STAFF[id]=obj; admStaff();
 }
 async function delStaff(id){
   if(!confirm('למחוק את '+STAFF[id].name+'?'))return;
@@ -966,8 +1121,12 @@ async function delCheck(id){ if(!confirm('למחוק את המשימה?'))return
 /* --- מלאי --- */
 function admInv(){
   const list=Object.entries(INV).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
-  let h=list.map(([id,it])=>`<div class="adm-row" data-id="${id}">
-    <div class="r1"><input type="text" class="f-name" value="${esc(it.name)}" placeholder="שם הפריט" style="flex:1">
+  let h=`<div class="hint" style="margin-bottom:12px">כמות = כמה יש עכשיו · מינימום = כשמגיעים אליו צריך להזמין.</div>`;
+  h+=list.map(([id,it])=>`<div class="adm-row" data-id="${id}">
+    <div class="r1"><input type="text" class="f-name" value="${esc(it.name)}" placeholder="שם הפריט" style="flex:1"></div>
+    <div class="r1">
+      <label class="qm">כמות<input type="number" class="f-qty" value="${+it.qty||0}" inputmode="numeric"></label>
+      <label class="qm">מינ׳<input type="number" class="f-min" value="${+it.min||0}" inputmode="numeric"></label>
       <label class="toggle"><input type="checkbox" class="f-active" ${it.active?'checked':''}>פעיל</label>
       <button class="save" onclick="saveInv('${id}')">שמור</button>
       <button class="del" onclick="delInv('${id}')">מחק</button></div></div>`).join('');
@@ -976,12 +1135,13 @@ function admInv(){
 }
 async function saveInv(id){
   const row=document.querySelector(`.adm-row[data-id="${id}"]`);
-  const obj={name:row.querySelector('.f-name').value.trim(),active:row.querySelector('.f-active').checked,order:INV[id].order||99};
+  const obj={name:row.querySelector('.f-name').value.trim(),qty:+row.querySelector('.f-qty').value||0,
+    min:+row.querySelector('.f-min').value||0,active:row.querySelector('.f-active').checked,order:INV[id].order||99};
   await cPut('inventory_items/'+id,obj); INV[id]=obj; toast('נשמר ✓');
 }
 async function addInv(){
   const id='i_'+Date.now(), order=Object.keys(INV).length+1;
-  const obj={name:'פריט חדש',active:true,order}; await cPut('inventory_items/'+id,obj); INV[id]=obj; admInv();
+  const obj={name:'פריט חדש',qty:0,min:1,active:true,order}; await cPut('inventory_items/'+id,obj); INV[id]=obj; admInv();
 }
 async function delInv(id){ if(!confirm('למחוק את הפריט?'))return; await cDel('inventory_items/'+id); delete INV[id]; admInv(); }
 
@@ -997,6 +1157,9 @@ window.addEventListener('unhandledrejection', e=>{
   if(msg.includes('net')||!navigator.onLine){ toast('❌ לא נשמר — בדוק/י חיבור'); e.preventDefault(); }
 });
 if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+// טיימר חי לשעון העבודה — מעדכן כל שנייה אם מוצג
+setInterval(()=>{ const el=document.getElementById('clock-elapsed');
+  if(el&&ACTIVE_SHIFT&&ACTIVE_SHIFT.start) el.textContent=elapsedStr(Date.now()-ACTIVE_SHIFT.start); },1000);
 
 /* ============================================================
    אתחול
