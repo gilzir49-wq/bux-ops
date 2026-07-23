@@ -1082,8 +1082,15 @@ function shiftText(s){
   if(s.stars) L.push(`⭐ בלטו לטובה: ${s.stars}`);
   return L.join('\n');
 }
-function shareShift(id){ const s=(FEED_ITEMS||[]).find(x=>x.id===id); if(!s) return;
-  window.open('https://wa.me/?text='+encodeURIComponent(shiftText(s)),'_blank'); }
+/* שיתוף אמין: חלונית שיתוף טבעית (עובד ב-PWA באייפון) → וואטסאפ ישיר → קליפבורד */
+function shareVia(text){
+  if(navigator.share){ navigator.share({text}).catch(()=>{}); return; }
+  const url='https://wa.me/?text='+encodeURIComponent(text);
+  const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>toast('הועתק — אפשר להדביק בוואטסאפ')).catch(()=>{});
+}
+function shareShift(id){ const s=(FEED_ITEMS||[]).find(x=>x.id===id); if(!s) return; shareVia(shiftText(s)); }
 
 /* ============================================================
    הערכות מאמנים — היסטוריה + ציונים + שיתוף
@@ -1156,8 +1163,7 @@ function evalText(e){
   if(e.followup) L.push(`📅 תאריך מעקב: ${fmtDate(e.followup)}`);
   return L.join('\n');
 }
-function shareEval(id){ const e=(window._EVALS||[]).find(x=>x.id===id); if(!e) return;
-  window.open('https://wa.me/?text='+encodeURIComponent(evalText(e)),'_blank'); }
+function shareEval(id){ const e=(window._EVALS||[]).find(x=>x.id===id); if(!e) return; shareVia(evalText(e)); }
 function salesCard(s){
   let h=`<div class="rec"><div class="rtop"><span class="who">${esc(s.name)}</span>
     <span class="chip gray">שירות/מכירה 🧡</span><span class="spacer"></span><span class="meta">${fmtDate(s.date)}</span></div>`;
