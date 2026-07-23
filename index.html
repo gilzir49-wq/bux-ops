@@ -801,18 +801,19 @@ function viewCoachEval(){
   h+=`<div class="field"><label>מעריך/ה</label><input type="text" value="${esc(ME.name)}" disabled></div>`;
   h+=`<div class="field"><label>הקשר</label>${seg('ctx',['תצפית חפיפה','אימון בפיקוח','אימון מלא'])}</div>`;
   h+=`<div class="field"><label>האימון והתנועות שנצפו</label><textarea id="wod" placeholder="למשל: Fran — Thruster + Pull-up…"></textarea></div>`;
-  h+=`<div class="sec-title">רובריקה — 1 עד 4</div>`;
+  h+=`<div class="sec-title">רובריקה — 1 עד 4 <span style="font-weight:500;color:var(--muted)">(פרט/י לכל אחד)</span></div>`;
   h+=RUBRIC.map(r=>`<div class="rubric"><div class="rt">${r.t}</div><div class="rw">משקל ${r.w}%</div>
     <div class="nums">`+[1,2,3,4].map(n=>`<button type="button" class="nb" data-r="${r.k}" data-n="${n}" onclick="rubricPick('${r.k}',${n},this)">${n}</button>`).join('')+
-    `</div><div class="rl" id="rl-${r.k}"></div></div>`).join('');
+    `</div><div class="rl" id="rl-${r.k}"></div>
+    <textarea class="r-note" id="rn-${r.k}" placeholder="פירוט: מה בדיוק ראית? דוגמה ממשית מהאימון…" style="margin-top:9px;min-height:56px"></textarea></div>`).join('');
   h+=`<div class="sec-title">בטיחות והיררכיה</div>`;
   h+=`<div class="field"><label>היו סיכוני בטיחות שלא טופלו? <span class="req">*</span></label><div class="hint">"כן" = דגל אדום, ללא תלות בציון</div>${segYN('safety','לא')}</div>`;
   h+=`<div class="field"><label>מכניקה → עקביות → אינטנסיביות: נשמר הסדר?</label>${seg('hier',['כן','חלקית','לא'])}</div>`;
   h+=`<div class="sec-title">איכותני</div>`;
-  h+=`<div class="field"><label>חוזקות</label><textarea id="strong"></textarea></div>`;
-  h+=`<div class="field"><label>נקודות לשיפור</label><textarea id="improve"></textarea></div>`;
-  h+=`<div class="field"><label>הערות / סיכום שיחה</label><textarea id="talk"></textarea></div>`;
-  h+=`<div class="field"><label>יעד אחד קונקרטי להמשך 🎯</label><input type="text" id="goal" placeholder="מטרה אחת ברורה…"></div>`;
+  h+=`<div class="field"><label>חוזקות 💪</label><div class="hint">מה עבד ממש טוב? דוגמאות ספציפיות מהאימון</div><textarea id="strong" placeholder="למשל: הדגמת ה-clean הייתה נקייה, כולם הבינו…"></textarea></div>`;
+  h+=`<div class="field"><label>נקודות לשיפור 📈</label><div class="hint">מה בדיוק לשפר, ואיך — לא כללי</div><textarea id="improve" placeholder="למשל: לא זיהה שגיאת גב בדדליפט של 2 מתאמנים — לעבור יותר בין התחנות…"></textarea></div>`;
+  h+=`<div class="field"><label>הערות / סיכום שיחה 💬</label><div class="hint">מה נאמר בשיחה איתו/ה, איך הגיב/ה</div><textarea id="talk" placeholder="על מה דיברתם, מה הוא/היא אמר/ה…"></textarea></div>`;
+  h+=`<div class="field"><label>יעד אחד קונקרטי להמשך 🎯</label><div class="hint">משפט אחד ברור ומדיד</div><input type="text" id="goal" placeholder="למשל: בשבועיים הקרובים — לזהות ולתקן major fault תוך 30 שנ׳"></div>`;
   h+=`<div class="sec-title">מסקנה</div>`;
   h+=`<div class="field"><label>המלצה</label>${seg('rec',['מוכן לשלב הבא','להמשיך חפיפה','דורש שיחה'])}</div>`;
   h+=`<div class="field"><label>תאריך מעקב</label><input type="date" id="followup"></div>`;
@@ -838,8 +839,9 @@ async function submitEval(btn){
   const {s,haveAll}=calcScore(); if(!haveAll)return toast('מלא/י את כל 6 הקריטריונים');
   if(!segVal('safety'))return toast('ענה/י על שאלת הבטיחות');
   const safety=segVal('safety'), pass=(s>=3.0 && safety!=='כן');
+  const notes={}; RUBRIC.forEach(r=>{ const el=document.getElementById('rn-'+r.k); const v=el?el.value.trim():''; if(v) notes[r.k]=v; });
   const ok=await withBusy(btn,()=>cPush('coach_evaluations',{ratee:document.getElementById('ratee').value,rater:ME.name,date:document.getElementById('date').value,
-    ctx:segVal('ctx'),wod:document.getElementById('wod').value.trim(),scores:{...RUBRIC_SCORES},weighted:+s.toFixed(2),
+    ctx:segVal('ctx'),wod:document.getElementById('wod').value.trim(),scores:{...RUBRIC_SCORES},notes,weighted:+s.toFixed(2),
     safety,hier:segVal('hier'),strong:document.getElementById('strong').value.trim(),improve:document.getElementById('improve').value.trim(),
     talk:document.getElementById('talk').value.trim(),goal:document.getElementById('goal').value.trim(),rec:segVal('rec'),
     followup:document.getElementById('followup').value,soloOk:pass,ts:Date.now()}));
@@ -1115,9 +1117,9 @@ function evalCard(e){
   h+=`<div class="row"><b>מסקנה:</b> ${pass?'רשאי/ת להעביר לבד ✅':'עדיין בחפיפה ⛔'}</div>`;
   if(e.ctx) h+=`<div class="row"><b>הקשר:</b> ${esc(e.ctx)}</div>`;
   if(e.wod) h+=`<div class="row"><b>אימון:</b> ${esc(e.wod)}</div>`;
-  const rl=rubricLines(e);
+  const rl=rubricDetail(e);
   if(rl.length){ h+=`<div class="handoff" style="background:rgba(253,171,61,.06)"><b>📋 פירוט הקריטריונים</b>`+
-    rl.map((x,i)=>`<div style="margin-top:3px">${i+1}. ${esc(x)}</div>`).join('')+`</div>`; }
+    rl.map((x,i)=>`<div style="margin-top:6px">${i+1}. ${esc(x.t)}: <b>${x.n}/4</b> — ${esc(x.label)}${x.note?`<br><span style="color:var(--muted);font-size:13px">↳ ${esc(x.note)}</span>`:''}</div>`).join('')+`</div>`; }
   if(e.hier) h+=`<div class="row"><b>היררכיה:</b> ${esc(e.hier)}</div>`;
   if(e.strong) h+=`<div class="row"><b>חוזקות:</b> ${esc(e.strong)}</div>`;
   if(e.improve) h+=`<div class="row"><b>לשיפור:</b> ${esc(e.improve)}</div>`;
@@ -1131,10 +1133,10 @@ function evalCard(e){
 }
 async function delEval(id){ if(!confirm('למחוק את ההערכה?'))return;
   try{ await cDel('coach_evaluations/'+id); window._EVALS=(window._EVALS||[]).filter(x=>x.id!==id); toast('נמחק'); renderEvals(); }catch(e){ toast('❌ אין חיבור'); } }
-function rubricLines(e){
+function rubricDetail(e){
   if(!e.scores) return [];
   return RUBRIC.map(r=>{ const n=e.scores[r.k]; if(!n) return null;
-    return `${r.t} (${r.w}%): ${n}/4 — ${r.l[n-1]||''}`; }).filter(Boolean);
+    return {t:r.t, w:r.w, n, label:r.l[n-1]||'', note:(e.notes||{})[r.k]||''}; }).filter(Boolean);
 }
 function evalText(e){
   const L=[`⭐ *הערכת מאמן · קרוספיט באקס*`, `${e.ratee||''} · מעריך/ה: ${e.rater||''} · ${fmtDate(e.date)}`];
@@ -1144,8 +1146,8 @@ function evalText(e){
   L.push(e.soloOk?'✅ רשאי/ת להעביר לבד':'⛔ עדיין בחפיפה');
   if(e.safety==='כן') L.push('⚠️ דגל בטיחות — סיכון שלא טופל');
   if(e.hier) L.push(`היררכיה (מכניקה→עקביות→אינטנסיביות): ${e.hier}`);
-  const rl=rubricLines(e);
-  if(rl.length){ L.push(`\n📋 *פירוט הקריטריונים:*`); rl.forEach((x,i)=>L.push(`${i+1}. ${x}`)); }
+  const rl=rubricDetail(e);
+  if(rl.length){ L.push(`\n📋 *פירוט הקריטריונים:*`); rl.forEach((x,i)=>{ L.push(`${i+1}. ${x.t} (${x.w}%): ${x.n}/4 — ${x.label}`); if(x.note) L.push(`   ↳ ${x.note}`); }); }
   if(e.strong) L.push(`\n💪 חוזקות: ${e.strong}`);
   if(e.improve) L.push(`📈 נקודות לשיפור: ${e.improve}`);
   if(e.talk) L.push(`💬 סיכום שיחה: ${e.talk}`);
